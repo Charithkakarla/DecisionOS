@@ -1,0 +1,22 @@
+{
+  "agent_name": "Decision Intelligence Agent",
+  "version": "1.0.0",
+  "temperature": 0.1,
+  "required_keys": [
+    "business_goal",
+    "customer_intent",
+    "buying_stage",
+    "business_problem",
+    "estimated_revenue",
+    "estimated_time_to_close",
+    "urgency",
+    "stakeholders",
+    "business_risks",
+    "business_opportunities",
+    "missing_information",
+    "reasoning_summary",
+    "affected_kpis",
+    "next_required_information",
+    "recommended_actions"
+  ]
+}

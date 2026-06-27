@@ -1,0 +1,9 @@
+{
+  "agent_name": "Enterprise Knowledge Intelligence Agent",
+  "version": "1.0.0",
+  "capabilities": [
+    "Semantic Retrieval",
+    "Evidence Collector",
+    "Knowledge Scoring"
+  ]
+}

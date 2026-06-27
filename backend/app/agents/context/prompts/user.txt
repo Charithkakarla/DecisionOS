@@ -1,0 +1,20 @@
+# Contains: user.txt implementation.
+Extract enterprise context from the following transcript.
+
+Return JSON with this exact shape:
+{
+  "meeting_summary": "string",
+  "customer_profile": "string",
+  "pain_points": ["string"],
+  "decision_makers": ["string"],
+  "budget": "string or null",
+  "timeline": "string or null",
+  "competitors": ["string"],
+  "business_risks": ["string"],
+  "buying_signals": ["string"],
+  "action_items": ["string"],
+  "confidence": 0.0
+}
+
+Transcript:
+{transcript}

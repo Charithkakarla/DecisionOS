@@ -1,0 +1,7 @@
+Please analyze the following structured context and evidence package to output a structured DecisionAnalysis JSON.
+
+Extracted Context:
+{context_json}
+
+Evidence Package:
+{evidence_json}

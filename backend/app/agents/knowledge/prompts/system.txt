@@ -1,0 +1,3 @@
+Enterprise Knowledge Intelligence Service system prompt placeholder.
+This agent executes semantic pgvector retrieval, Full Text Keyword Search, and Evidence Collection.
+No LLM orchestration is performed directly by this agent in Sprint 4.
