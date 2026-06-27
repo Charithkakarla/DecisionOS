@@ -12,7 +12,9 @@ from app.agents.decision.router import router as decision_router
 from app.agents.strategy.router import router as strategy_router
 from app.agents.reflection.router import router as reflection_router
 from app.agents.approval.router import router as approval_router
-
+from app.agents.learning.router import router as learning_router
+from app.agents.workflows.router import router as workflows_router
+from app.agents.dashboard.router import router as dashboard_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -41,6 +43,9 @@ app.include_router(decision_router)
 app.include_router(strategy_router)
 app.include_router(reflection_router)
 app.include_router(approval_router)
+app.include_router(learning_router)
+app.include_router(workflows_router)
+app.include_router(dashboard_router)
 
 
 @app.get("/health")
@@ -51,3 +56,5 @@ async def health() -> dict[str, str]:
 @app.post("/api/v1/agent/run", response_model=WorkflowState)
 async def run_agent(state: WorkflowState) -> WorkflowState:
     return await run_workflow(state)
+
+# touch

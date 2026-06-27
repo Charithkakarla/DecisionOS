@@ -265,7 +265,25 @@ export interface ReflectionPayload {
 }
 
 export type ReflectionArtifact = BaseArtifact<ReflectionPayload>;
-export type LearningArtifact = BaseArtifact<Record<string, any>>;
+export interface LearningPayload {
+  learning_summary: string;
+  organizational_insights: string[];
+  accepted_patterns: string[];
+  rejected_patterns: string[];
+  strategy_success_patterns: string[];
+  common_risks: string[];
+  common_failures: string[];
+  reviewer_preferences: string[];
+  prompt_improvement_suggestions: string[];
+  knowledge_gaps: string[];
+  recommended_playbook_updates: string[];
+  performance_trends: Record<string, unknown>;
+  organizational_memory_reference: string;
+  learning_timestamp: string;
+  execution_metadata: Record<string, unknown>;
+}
+
+export type LearningArtifact = BaseArtifact<LearningPayload>;
 
 // ── Sprint 8 — Human Approval & Enterprise Governance Layer types ─────────
 

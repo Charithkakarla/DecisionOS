@@ -11,7 +11,7 @@ class AgentConfig(BaseModel):
 
 class SystemAgentConfigs(BaseModel):
     context: AgentConfig = AgentConfig(model="gemini-1.5-flash", temperature=0.1, max_tokens=1500)
-    knowledge: AgentConfig = AgentConfig(model="text-embedding-004", temperature=0.0, max_tokens=500)
+    knowledge: AgentConfig = AgentConfig(model="gemini-embedding-2", temperature=0.0, max_tokens=500)
     decision: AgentConfig = AgentConfig(model="gemini-1.5-flash", temperature=0.2, max_tokens=2500)
     strategy: AgentConfig = AgentConfig(model="gemini-1.5-flash", temperature=0.2, max_tokens=3000)
 

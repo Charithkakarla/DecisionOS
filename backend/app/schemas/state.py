@@ -218,8 +218,25 @@ class ReflectionArtifact(BaseArtifact):
 class ApprovalArtifact(BaseArtifact):
     payload: dict[str, Any]
 
+class LearningPayload(BaseModel):
+    learning_summary: str = ""
+    organizational_insights: list[str] = Field(default_factory=list)
+    accepted_patterns: list[str] = Field(default_factory=list)
+    rejected_patterns: list[str] = Field(default_factory=list)
+    strategy_success_patterns: list[str] = Field(default_factory=list)
+    common_risks: list[str] = Field(default_factory=list)
+    common_failures: list[str] = Field(default_factory=list)
+    reviewer_preferences: list[str] = Field(default_factory=list)
+    prompt_improvement_suggestions: list[str] = Field(default_factory=list)
+    knowledge_gaps: list[str] = Field(default_factory=list)
+    recommended_playbook_updates: list[str] = Field(default_factory=list)
+    performance_trends: dict[str, Any] = Field(default_factory=dict)
+    organizational_memory_reference: str = ""
+    learning_timestamp: str = ""
+    execution_metadata: dict[str, Any] = Field(default_factory=dict)
+
 class LearningArtifact(BaseArtifact):
-    payload: dict[str, Any]
+    payload: LearningPayload
 
 
 class WorkflowEvent(BaseModel):

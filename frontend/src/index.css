@@ -1,12 +1,77 @@
-/* Contains: index.css implementation. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html,
-body,
-#root {
-  margin: 0;
-  min-height: 100%;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+@layer base {
+  :root {
+    /* Olive Enterprise Minimal Palette */
+    --background: 210 20% 98%; /* Very light neutral/slate tint */
+    --foreground: 220 15% 20%; /* Dark muted gray/slate for text */
+    
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 20%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 20%;
+    
+    --primary: 100 20% 40%; /* Sage Green */
+    --primary-foreground: 100 20% 98%;
+    
+    --secondary: 100 10% 92%; /* Very light olive tint */
+    --secondary-foreground: 100 20% 30%;
+    
+    --muted: 220 10% 94%;
+    --muted-foreground: 220 10% 45%;
+    
+    --accent: 45 30% 60%; /* Muted Gold */
+    --accent-foreground: 45 30% 20%;
+    
+    --destructive: 0 40% 50%;
+    --destructive-foreground: 0 40% 98%;
+
+    /* Status Colors (Harmonized with Olive) */
+    --status-success: 120 25% 45%;
+    --status-success-bg: 120 20% 92%;
+    --status-warning: 50 30% 50%;
+    --status-warning-bg: 50 30% 94%;
+    --status-error: 10 35% 55%;
+    --status-error-bg: 10 30% 95%;
+
+    --border: 220 10% 88%;
+    --input: 220 10% 88%;
+    --ring: 100 20% 40%;
+
+    --radius: 0.75rem; /* md/lg feel rounded corners */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight font-semibold;
+  }
+}
+
+/* Custom scrollbar for webkit */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; 
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full; 
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-300; 
 }
