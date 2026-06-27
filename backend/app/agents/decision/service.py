@@ -1,9 +1,11 @@
 # Contains: service.py implementation.
 import time
+import uuid
 import logging
 from app.contracts.decision import DecisionAgent
-from app.schemas.state import WorkflowState, AgentMetadata, AgentExecutionLog
+from app.schemas.state import WorkflowState, DecisionArtifact, AgentExecutionMetadata, AgentExecutionLog
 from app.agents.decision.reasoning import BusinessReasoningEngine
+from app.core.config import settings
 
 logger = logging.getLogger("decision_os.decision.service")
 
@@ -17,20 +19,36 @@ class DecisionService(DecisionAgent):
         start_time = time.time()
         
         # Guard: check if extracted context is present
-        if not state.extracted_context:
+        if not state.context_artifact or not state.context_artifact.payload:
             state.execution_logs.append("decision: failed - no extracted context in state")
             state.draft_recommendation = "Error: context extraction missing."
             return state
 
         try:
             # Execute the reasoning engine using extracted context and evidence package
+            context_payload = state.context_artifact.payload
+            evidence_payload = state.knowledge_artifact.payload if state.knowledge_artifact else None
+            
             decision_pkg = await self.reasoning_engine.execute_reasoning(
-                context=state.extracted_context,
-                evidence_package=state.evidence_package
+                context=context_payload,
+                evidence_package=evidence_payload
             )
             
-            # Update state with decision package
-            state.decision_package = decision_pkg
+            # Update state with decision artifact
+            opp = decision_pkg.business_scores.get("opportunity_score", 0.0)
+            risk = decision_pkg.business_scores.get("risk_score", 0.0)
+            conf = decision_pkg.confidence.get("overall_confidence", 0.85)
+            
+            state.decision_artifact = DecisionArtifact(
+                artifact_id=str(uuid.uuid4()),
+                workflow_id=state.workflow_id,
+                agent_name="decision",
+                schema_version="1.0.0",
+                created_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(start_time)),
+                provider=decision_pkg.execution_metadata.get("provider_used", "MockDecisionProvider"),
+                confidence=conf,
+                payload=decision_pkg
+            )
             
             # Format draft recommendation for strategist and loop compatibility
             state.draft_recommendation = (
@@ -41,17 +59,13 @@ class DecisionService(DecisionAgent):
             )
             
             elapsed_ms = int((time.time() - start_time) * 1000)
-            opp = decision_pkg.business_scores["opportunity_score"]
-            risk = decision_pkg.business_scores["risk_score"]
-            conf = decision_pkg.confidence["overall_confidence"]
             
             state.execution_logs.append(
                 f"decision: completed decision analysis in {elapsed_ms}ms "
                 f"(opportunity: {opp:.4f}, risk: {risk:.4f}, confidence: {conf:.4f})"
             )
             
-            # Append shared infrastructure AgentMetadata and AgentExecutionLog (Sprint 5.5)
-            # Estimate tokens: 1 token roughly 4 characters
+            # Estimate tokens
             in_chars = len(state.transcript)
             out_chars = len(state.draft_recommendation)
             input_tokens = in_chars // 4
@@ -59,20 +73,27 @@ class DecisionService(DecisionAgent):
             total_tokens = input_tokens + output_tokens
             cost = (input_tokens * 0.000000075) + (output_tokens * 0.00000030) # approx cost scale
             
-            meta = AgentMetadata(
-                execution_time_ms=elapsed_ms,
-                latency_ms=elapsed_ms,
+            # Populate unified metadata
+            meta = AgentExecutionMetadata(
+                agent_name="Decision Agent",
                 provider=decision_pkg.execution_metadata.get("provider_used", "MockDecisionProvider"),
+                model=settings.gemini_model,
+                latency_ms=elapsed_ms,
                 token_usage={"input_tokens": input_tokens, "output_tokens": output_tokens, "total_tokens": total_tokens},
-                retry_count=0,
+                estimated_cost=round(cost, 6),
+                started_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(start_time)),
+                completed_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 status="completed",
-                cost=round(cost, 6)
+                retry_count=0,
+                version="1.0.0"
             )
+            state.agent_metadata["decision"] = meta
             
+            # Maintain backward compatibility log
             log_record = AgentExecutionLog(
                 agent_name="Decision Agent",
-                started=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(start_time)),
-                completed=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                started=meta.started_at,
+                completed=meta.completed_at,
                 duration_ms=elapsed_ms,
                 provider=meta.provider,
                 prompt_version="1.0.0",
@@ -81,9 +102,6 @@ class DecisionService(DecisionAgent):
                 errors=[],
                 evidence_count=decision_pkg.execution_metadata.get("evidence_count", 0)
             )
-            
-            # Store in shared state trackers
-            state.agent_metadata["decision"] = meta
             state.agent_logs["decision"] = log_record
             
         except Exception as e:

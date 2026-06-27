@@ -1,0 +1,31 @@
+You are generating a business execution strategy for the following opportunity.
+
+## Decision Package
+
+{decision_package_json}
+
+## Business Context
+
+{context_json}
+
+## Optimization Analysis
+
+The deterministic optimizer has already evaluated the recommendations and selected the best option:
+
+{optimization_result_json}
+
+## Your Task
+
+Using the Decision Package, Business Context, and Optimization Analysis above:
+
+1. Confirm the selected strategy based on the optimizer's top-ranked recommendation
+2. Generate a detailed, phase-by-phase execution roadmap (3–7 phases minimum)
+3. Identify all external dependencies
+4. List all risks (one per item)
+5. Write a concrete mitigation action for each risk (same order)
+6. Define the stakeholder plan with named roles and responsibilities
+7. List all required resources
+8. Summarize alternative strategies in 1–2 sentences each
+9. List supporting evidence citations
+
+Return ONLY the JSON object described in your system instructions. No additional text.

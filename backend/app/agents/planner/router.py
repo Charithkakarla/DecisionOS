@@ -3,6 +3,8 @@ from app.agents.context.router import should_execute as should_run_context
 from app.agents.decision.router import should_execute as should_run_decision
 from app.agents.knowledge.router import should_execute as should_run_knowledge
 from app.agents.strategy.router import should_execute as should_run_strategy
+from app.agents.reflection.router import should_execute as should_run_reflection
+from app.agents.approval.router import should_execute as should_run_approval
 from app.schemas.state import WorkflowState
 
 
@@ -15,4 +17,8 @@ def next_step(state: WorkflowState) -> str | None:
         return "decision"
     if should_run_strategy(state):
         return "strategy"
+    if should_run_reflection(state):
+        return "reflection"
+    if should_run_approval(state):
+        return "approval"
     return None

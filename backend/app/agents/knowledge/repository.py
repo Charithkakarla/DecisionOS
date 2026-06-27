@@ -11,6 +11,7 @@ logger = logging.getLogger("decision_os.knowledge.repository")
 
 Base = declarative_base()
 
+# --- Legacy Knowledge Domain Tables ---
 class DBDocument(Base):
     __tablename__ = "documents"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -43,6 +44,75 @@ class DBMetric(Base):
     metric_value = Column(Float, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+# --- New Enterprise Audit & Management Domain Tables (Sprint 7) ---
+
+class DBUser(Base):
+    __tablename__ = "users"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    username = Column(String, nullable=False, unique=True)
+    role = Column(String, default="operator") # operator, admin, executive
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class DBProject(Base):
+    __tablename__ = "projects"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class DBWorkflow(Base):
+    __tablename__ = "workflows"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
+    name = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class DBWorkflowRun(Base):
+    __tablename__ = "workflow_runs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id", ondelete="CASCADE"), nullable=True)
+    status = Column(String, default="running")  # running, completed, failed
+    started_at = Column(DateTime, default=datetime.datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+class DBArtifact(Base):
+    __tablename__ = "artifacts"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_run_id = Column(UUID(as_uuid=True), ForeignKey("workflow_runs.id", ondelete="CASCADE"), nullable=False)
+    agent_name = Column(String, nullable=False)
+    artifact_type = Column(String, nullable=False)  # context, knowledge, decision, strategy, reflection
+    payload = Column(JSON, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class DBAgentExecutionLog(Base):
+    __tablename__ = "agent_execution_logs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_run_id = Column(UUID(as_uuid=True), ForeignKey("workflow_runs.id", ondelete="CASCADE"), nullable=False)
+    agent_name = Column(String, nullable=False)
+    provider = Column(String, nullable=True)
+    latency_ms = Column(Float, default=0.0)
+    input_tokens = Column(Integer, default=0)
+    output_tokens = Column(Integer, default=0)
+    estimated_cost = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class DBFeedback(Base):
+    __tablename__ = "feedback"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_run_id = Column(UUID(as_uuid=True), ForeignKey("workflow_runs.id", ondelete="CASCADE"), nullable=False)
+    score = Column(Integer, nullable=False) # 1-5 rating
+    comments = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class DBAuditLog(Base):
+    __tablename__ = "audit_logs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_run_id = Column(UUID(as_uuid=True), ForeignKey("workflow_runs.id", ondelete="CASCADE"), nullable=True)
+    action = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+# --- DB Initialization and Operations ---
 
 async def init_db(engine) -> None:
     logger.info("Initializing knowledge database tables...")
@@ -119,8 +189,6 @@ async def delete_document(session, doc_id: uuid.UUID) -> bool:
 
 
 async def search_semantic(session, query_embedding: list[float], limit: int = 5) -> list[tuple[DBDocumentChunk, DBDocument, float]]:
-    # Cosine distance similarity search
-    # similarity = 1 - cosine_distance
     distance = DBDocumentChunk.embedding.cosine_distance(query_embedding)
     stmt = (
         select(DBDocumentChunk, DBDocument, (1.0 - distance).label("similarity"))
@@ -134,7 +202,6 @@ async def search_semantic(session, query_embedding: list[float], limit: int = 5)
 
 
 async def search_fts(session, keyword_query: str, limit: int = 5) -> list[tuple[DBDocumentChunk, DBDocument, float]]:
-    # PostgreSQL Full Text Search
     stmt = (
         select(
             DBDocumentChunk, 

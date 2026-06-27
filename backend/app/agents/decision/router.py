@@ -10,8 +10,7 @@ logger = logging.getLogger("decision_os.decision.router")
 router = APIRouter(prefix="/api/v1/decision", tags=["decision"])
 
 def should_execute(state: WorkflowState) -> bool:
-    # Execute if context and playbooks exist, but decision package is missing
-    return state.decision_package is None
+    return state.decision_artifact is None
 
 @router.post("/analyze", response_model=DecisionAnalysis)
 async def analyze_decision(state: WorkflowState) -> Any:

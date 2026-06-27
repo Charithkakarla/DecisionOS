@@ -1,6 +1,19 @@
 # Contains: config.py implementation.
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class AgentConfig(BaseModel):
+    model: str
+    temperature: float = 0.0
+    max_tokens: int = 2000
+
+
+class SystemAgentConfigs(BaseModel):
+    context: AgentConfig = AgentConfig(model="gemini-1.5-flash", temperature=0.1, max_tokens=1500)
+    knowledge: AgentConfig = AgentConfig(model="text-embedding-004", temperature=0.0, max_tokens=500)
+    decision: AgentConfig = AgentConfig(model="gemini-1.5-flash", temperature=0.2, max_tokens=2500)
+    strategy: AgentConfig = AgentConfig(model="gemini-1.5-flash", temperature=0.2, max_tokens=3000)
 
 
 class Settings(BaseSettings):
@@ -20,6 +33,9 @@ class Settings(BaseSettings):
     # Chunking configuration
     knowledge_chunk_size: int = Field(default=500)
     knowledge_chunk_overlap: int = Field(default=100)
+
+    # Central Agent configurations
+    agent_configs: SystemAgentConfigs = SystemAgentConfigs()
 
     model_config = SettingsConfigDict(env_prefix="DECISION_OS_", env_file=".env", extra="ignore")
 

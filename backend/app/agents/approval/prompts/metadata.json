@@ -1,0 +1,20 @@
+{
+  "agent": "approval",
+  "sprint": 8,
+  "schema_version": "1.0.0",
+  "description": "Human Approval & Enterprise Governance Layer — prompt registry metadata.",
+  "prompts": {
+    "review_summary": {
+      "version": "1.0.0",
+      "purpose": "Generate an AI-assisted executive review summary for the human reviewer.",
+      "provider_support": ["gemini", "grok", "mock"],
+      "variables": ["workflow_id", "reviewer", "trust_score", "governance_score", "selected_strategy", "audit_summary"]
+    },
+    "governance_check": {
+      "version": "1.0.0",
+      "purpose": "Validate governance policy compliance for the approval decision.",
+      "provider_support": ["mock"],
+      "variables": ["reviewer", "department", "business_owner", "approval_confidence"]
+    }
+  }
+}

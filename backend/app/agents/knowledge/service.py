@@ -1,14 +1,16 @@
 # Contains: service.py implementation.
 import time
+import uuid
 import logging
 from app.contracts.knowledge import KnowledgeAgent
-from app.schemas.state import WorkflowState
+from app.schemas.state import WorkflowState, KnowledgeArtifact, AgentExecutionMetadata
 from app.core.database import SessionLocal
 from app.agents.knowledge.embeddings import EmbeddingService
 from app.agents.knowledge.retrieval import perform_hybrid_search
 from app.agents.knowledge.cache import cache_service
 from app.agents.knowledge.evidence_collector import collect_evidence
 from app.agents.knowledge.repository import save_metric
+from app.core.config import settings
 
 logger = logging.getLogger("decision_os.knowledge.service")
 
@@ -21,7 +23,7 @@ class KnowledgeService(KnowledgeAgent):
         start_time = time.time()
         
         # 1. Parse search query from context
-        context = state.extracted_context or {}
+        context = state.context_artifact.payload if state.context_artifact else {}
         query_parts = []
         if context.get("meeting_summary"):
             query_parts.append(context["meeting_summary"])
@@ -30,14 +32,22 @@ class KnowledgeService(KnowledgeAgent):
             
         query_text = " ".join(query_parts).strip()
         if not query_text:
-            # Fallback to transcript snippet
             query_text = state.transcript[:500].strip()
             
         if not query_text:
             state.execution_logs.append("knowledge: empty query text, skipping retrieval")
             from app.schemas.state import EvidencePackage
-            state.evidence_package = EvidencePackage()
-            state.relevant_playbooks = []
+            evidence_package = EvidencePackage()
+            state.knowledge_artifact = KnowledgeArtifact(
+                artifact_id=str(uuid.uuid4()),
+                workflow_id=state.workflow_id,
+                agent_name="knowledge",
+                schema_version="1.0.0",
+                created_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(start_time)),
+                provider="None",
+                confidence=0.0,
+                payload=evidence_package
+            )
             return state
 
         logger.info(f"Generated search query: '{query_text}'")
@@ -51,16 +61,6 @@ class KnowledgeService(KnowledgeAgent):
         retrieval_time_ms = 0.0
         
         async with SessionLocal() as db_session:
-            if cached_results:
-                state.execution_logs.append("knowledge: retrieved cached hybrid search results")
-                # Reconstruct DBDocument and DBDocumentChunk representations from cache
-                # Since caching serializes them, we can just use cached representations directly in collector
-                # Or keep a simple wrapper. Let's make sure the collector can read cached structures.
-                # To make this easy, we'll cache the collected evidence package itself, or clean representation.
-                # Let's see: we can cache the final structured dictionary from collector!
-                # Yes! Let's do that!
-                pass
-            
             # If not cached, perform full embedding + hybrid search
             if not cached_results:
                 # 3. Generate Embeddings
@@ -85,7 +85,6 @@ class KnowledgeService(KnowledgeAgent):
                 await save_metric(db_session, "retrieval_time_ms", retrieval_time_ms)
 
                 # Format db results to serialize-friendly list for cache
-                # Since SQLAlchemy models can't be easily JSON serialized, we convert them
                 serializable_results = []
                 for res in db_results:
                     chunk = res["chunk"]
@@ -112,10 +111,8 @@ class KnowledgeService(KnowledgeAgent):
                 cached_results = serializable_results
                 
             # 5. Build Evidence Package from serializable representations
-            # Map cached representation format to collector
             collector_inputs = []
             for item in cached_results:
-                # Mock chunk and doc objects so collector interface is consistent
                 from types import SimpleNamespace
                 chunk_mock = SimpleNamespace(
                     id=item["chunk"]["id"],
@@ -137,18 +134,50 @@ class KnowledgeService(KnowledgeAgent):
                 })
                 
             evidence_package = collect_evidence(collector_inputs)
-            state.evidence_package = evidence_package
+            
+            # Wrap in KnowledgeArtifact
+            state.knowledge_artifact = KnowledgeArtifact(
+                artifact_id=str(uuid.uuid4()),
+                workflow_id=state.workflow_id,
+                agent_name="knowledge",
+                schema_version="1.0.0",
+                created_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(start_time)),
+                provider="GeminiEmbeddingsProvider",
+                confidence=evidence_package.confidence_score,
+                payload=evidence_package
+            )
             
             # Store metrics for average similarity in database
             if not cached_results:
                 await save_metric(db_session, "average_similarity", evidence_package.confidence_score)
-            
-            # Maintain backward compatibility for relevant playbooks
-            state.relevant_playbooks = list(set([res.document_name for res in evidence_package.knowledge_results]))
             
         duration_ms = int((time.time() - start_time) * 1000)
         state.execution_logs.append(
             f"knowledge: gathered {len(evidence_package.knowledge_results)} evidence chunks "
             f"(confidence: {evidence_package.confidence_score:.4f}) in {duration_ms}ms"
         )
+        
+        # Capture metrics
+        in_chars = len(query_text)
+        out_chars = len(str(evidence_package.model_dump()))
+        input_tokens = in_chars // 4
+        output_tokens = out_chars // 4
+        total_tokens = input_tokens + output_tokens
+        cost = (input_tokens * 0.000000075) + (output_tokens * 0.00000030)
+        
+        meta = AgentExecutionMetadata(
+            agent_name="Knowledge Agent",
+            provider="GeminiEmbeddingsProvider",
+            model="text-embedding-004",
+            latency_ms=duration_ms,
+            token_usage={"input_tokens": input_tokens, "output_tokens": output_tokens, "total_tokens": total_tokens},
+            estimated_cost=round(cost, 6),
+            started_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(start_time)),
+            completed_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            status="completed",
+            retry_count=0,
+            version="1.0.0"
+        )
+        state.agent_metadata["knowledge"] = meta
+        
         return state

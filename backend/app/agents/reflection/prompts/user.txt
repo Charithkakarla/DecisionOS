@@ -1,0 +1,7 @@
+Analyze the following context and proposed strategy package to produce the explainability audit report:
+
+Context Payload:
+{context_json}
+
+Strategy Package:
+{strategy_json}

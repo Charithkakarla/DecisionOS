@@ -1,0 +1,14 @@
+{
+  "prompt_version": "1.0.0",
+  "agent": "Strategy Intelligence Agent",
+  "sprint": "6",
+  "model_preference": "gemini-2.0-flash",
+  "fallback_model": "mock",
+  "max_tokens": 4096,
+  "temperature": 0.2,
+  "response_format": "json",
+  "system_prompt_file": "system.txt",
+  "user_prompt_file": "user.txt",
+  "created_at": "2026-06-27",
+  "schema_version": "1.0.0"
+}

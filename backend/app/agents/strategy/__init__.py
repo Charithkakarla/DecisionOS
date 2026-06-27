@@ -1,4 +1,4 @@
 # Contains: __init__.py implementation.
-from app.agents.strategy.service import MockStrategyAgent
+from app.agents.strategy.service import StrategyService
 
-__all__ = ["MockStrategyAgent"]
+__all__ = ["StrategyService"]

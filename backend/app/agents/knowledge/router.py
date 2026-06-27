@@ -20,7 +20,7 @@ logger = logging.getLogger("decision_os.knowledge.router")
 router = APIRouter(prefix="/api/v1/knowledge", tags=["knowledge"])
 
 def should_execute(state: WorkflowState) -> bool:
-    return state.evidence_package is None
+    return state.knowledge_artifact is None
 
 async def background_process_file(doc_id: uuid.UUID, file_content: bytes, filename: str):
     logger.info(f"Background task: starting processing for doc {doc_id} ({filename})")

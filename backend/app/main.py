@@ -9,11 +9,14 @@ from app.core.database import engine
 from app.agents.knowledge.repository import init_db
 from app.agents.knowledge.router import router as knowledge_router
 from app.agents.decision.router import router as decision_router
+from app.agents.strategy.router import router as strategy_router
+from app.agents.reflection.router import router as reflection_router
+from app.agents.approval.router import router as approval_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize the database on startup (pgvector and tables)
+    # Initialize the database on startup (pgvector and tables including Sprint 8 tables)
     await init_db(engine)
     yield
 
@@ -35,6 +38,9 @@ app.add_middleware(
 
 app.include_router(knowledge_router)
 app.include_router(decision_router)
+app.include_router(strategy_router)
+app.include_router(reflection_router)
+app.include_router(approval_router)
 
 
 @app.get("/health")
