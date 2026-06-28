@@ -15,8 +15,6 @@ import ReflectionDashboard from "../components/ReflectionDashboard";
 import ApprovalDashboard from "../components/ApprovalDashboard";
 import LearningDashboard from "../components/LearningDashboard";
 import KnowledgeDashboard from "../components/KnowledgeDashboard";
-import LogStream from "../components/LogStream";
-import Inspector from "../components/Inspector";
 import DecisionReadiness from "../components/DecisionReadiness";
 import DevilsAdvocate from "../components/DevilsAdvocate";
 import WhatIfSimulator from "../components/WhatIfSimulator";
@@ -102,21 +100,10 @@ function FeatureGate({ label, children }: { label: string; children: React.React
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
 const TABS = [
-  // Core pipeline
-  { id: "context",    label: "Context",          icon: <Cpu size={14} />,          group: "pipeline" },
-  { id: "readiness",  label: "Readiness",         icon: <GaugeCircle size={14} />,  group: "pipeline", badge: "new" },
-  { id: "knowledge",  label: "Knowledge",         icon: <Database size={14} />,     group: "pipeline" },
-  { id: "decision",   label: "Decision",          icon: <BrainCircuit size={14} />, group: "pipeline" },
-  { id: "advocate",   label: "Devil's Advocate",  icon: <ShieldAlert size={14} />,  group: "pipeline", badge: "new" },
-  { id: "simulator",  label: "What-If",           icon: <Sliders size={14} />,      group: "pipeline", badge: "new" },
-  { id: "strategy",   label: "Strategy",          icon: <Target size={14} />,       group: "pipeline" },
-  { id: "reflection", label: "Reflection",        icon: <BookOpen size={14} />,     group: "pipeline" },
-  { id: "approval",   label: "Approval",          icon: <ShieldCheck size={14} />,  group: "pipeline" },
-  { id: "learning",   label: "Learning",          icon: <Zap size={14} />,          group: "pipeline" },
-  // Reports & tools
-  { id: "report",     label: "Report",            icon: <FileText size={14} />,     group: "tools",    badge: "new" },
-  { id: "inspector",  label: "Inspector",         icon: <Eye size={14} />,          group: "tools" },
-  { id: "logs",       label: "Logs",              icon: <ScrollText size={14} />,   group: "tools" },
+  { id: "context_knowledge",     label: "Context & Knowledge",       icon: <Cpu size={14} />,          group: "pipeline" },
+  { id: "decision_intelligence", label: "Decision Intelligence",     icon: <BrainCircuit size={14} />, group: "pipeline" },
+  { id: "strategy_governance",   label: "Strategy & Governance",     icon: <Target size={14} />,       group: "pipeline" },
+  { id: "review_learning",       label: "Review & Learning",         icon: <Zap size={14} />,          group: "pipeline" },
 ] as const;
 
 type TabId = typeof TABS[number]["id"];
@@ -127,7 +114,7 @@ export function WorkflowDetails() {
   const { id }      = useParams();
   const navigate    = useNavigate();
   const location    = useLocation();
-  const [activeTab, setActiveTab] = useState<TabId>("context");
+  const [activeTab, setActiveTab] = useState<TabId>("context_knowledge");
   const [approvalCompleted, setApprovalCompleted] = useState(false);
   const [knowledgeSearchQuery, setKnowledgeSearchQuery] = useState("");
   const [isKnowledgeSearching, setIsKnowledgeSearching] = useState(false);
@@ -151,13 +138,10 @@ export function WorkflowDetails() {
   const workflowState: WorkflowState | null = location.state?.initialData ?? null;
 
   const agentStatus: Record<string, boolean> = {
-    context:    !!workflowState?.context_artifact,
-    knowledge:  !!workflowState?.knowledge_artifact,
-    decision:   !!workflowState?.decision_artifact,
-    strategy:   !!workflowState?.strategy_artifact,
-    reflection: !!workflowState?.reflection_artifact,
-    approval:   !!workflowState?.approval_artifact,
-    learning:   !!workflowState?.learning_artifact,
+    context_knowledge:     !!workflowState?.context_artifact || !!workflowState?.knowledge_artifact,
+    decision_intelligence: !!workflowState?.decision_artifact,
+    strategy_governance:   !!workflowState?.strategy_artifact || !!workflowState?.reflection_artifact || !!workflowState?.approval_artifact,
+    review_learning:       !!workflowState?.learning_artifact,
   };
 
   const hasPendingApproval =
@@ -198,7 +182,7 @@ export function WorkflowDetails() {
                   ? "bg-status-success-bg border-status-success/25 text-status-success"
                   : "bg-secondary border-border text-muted-foreground"
               }`}>
-                {done ? "✓" : "○"} {agent.charAt(0).toUpperCase() + agent.slice(1)}
+                {done ? "✓" : "○"} {TABS.find(t => t.id === agent)?.label || agent}
               </span>
             ))}
           </div>
@@ -238,15 +222,8 @@ export function WorkflowDetails() {
                     }`} />
                   )}
 
-                  {/* "new" badge */}
-                  {"badge" in tab && tab.badge === "new" && (
-                    <span className="text-[8px] font-black bg-primary text-primary-foreground px-1 py-0.5 rounded uppercase leading-none">
-                      NEW
-                    </span>
-                  )}
-
                   {/* Pending approval pulse */}
-                  {tab.id === "approval" && hasPendingApproval && (
+                  {tab.id === "strategy_governance" && hasPendingApproval && (
                     <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-status-warning animate-pulse" />
                   )}
                 </button>
@@ -274,173 +251,189 @@ export function WorkflowDetails() {
           ) : (
             <div className="p-6">
 
-              {activeTab === "context" && (
-                workflowState.context_artifact
-                  ? <ContextPanel artifact={workflowState.context_artifact} />
-                  : <EmptyTab label="Context" />
-              )}
-
-              {activeTab === "readiness" && (
-                <FeatureGate label="Decision Readiness">
-                  <DecisionReadiness workflowState={workflowState} />
-                </FeatureGate>
-              )}
-
-              {activeTab === "knowledge" && (
-                <div className="space-y-6 animate-in fade-in duration-300">
-                  {/* Semantic Search Box */}
-                  <div className="bg-card border border-border rounded-xl p-5 shadow-sm space-y-4">
-                    <div>
-                      <h3 className="text-sm font-semibold text-foreground">Interactive Semantic Search</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">Query the organization's vector base for real-time playbooks or documentation matches.</p>
-                    </div>
-                    
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                      <input 
-                        type="text" 
-                        value={knowledgeSearchQuery}
-                        onChange={(e) => setKnowledgeSearchQuery(e.target.value)}
-                        onKeyDown={handleKnowledgeSearch}
-                        placeholder="Ask a question or search playbooks..." 
-                        className="w-full bg-background border border-border rounded-lg py-2 pl-10 pr-4 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                      />
-                    </div>
-
-                    {/* Search Results */}
-                    {isKnowledgeSearching ? (
-                      <div className="flex flex-col items-center justify-center py-8 text-muted-foreground text-xs">
-                        <Loader2 className="animate-spin mb-2" size={24} />
-                        <p>Searching semantic embeddings...</p>
-                      </div>
-                    ) : knowledgeSearchResults ? (
-                      <div className="space-y-3 mt-2 border-t border-border/50 pt-4">
-                        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Search Results ({knowledgeSearchResults.knowledge_results?.length ?? 0})</h4>
-                        {knowledgeSearchResults.knowledge_results?.map((item: any, i: number) => (
-                          <div key={i} className="p-3.5 rounded-lg border border-border bg-secondary/30 text-xs space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="font-semibold text-primary">{item.document_name}</span>
-                              <span className="text-[10px] text-muted-foreground bg-secondary px-2 py-0.5 rounded">Match: {(item.similarity_score * 100).toFixed(0)}%</span>
-                            </div>
-                            <p className="text-foreground leading-relaxed font-mono bg-card border border-border/40 p-2.5 rounded whitespace-pre-wrap">{item.content}</p>
-                          </div>
-                        ))}
-                        {(!knowledgeSearchResults.knowledge_results || knowledgeSearchResults.knowledge_results.length === 0) && (
-                          <p className="text-center text-muted-foreground text-xs py-4">No matching playbooks or documents found.</p>
-                        )}
-                      </div>
-                    ) : null}
+              {activeTab === "context_knowledge" && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                  {/* Left Column: Context */}
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold border-b border-border pb-2">Business Context</h3>
+                    {workflowState.context_artifact ? (
+                      <ContextPanel artifact={workflowState.context_artifact} />
+                    ) : (
+                      <EmptyTab label="Context" />
+                    )}
                   </div>
 
-                  {/* Original Run Results */}
-                  <div className="bg-card border border-border rounded-xl p-5 shadow-sm space-y-4">
-                    <div>
-                      <h3 className="text-sm font-semibold text-foreground">Pipeline Retrieval Evidence</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">The exact context chunks collected by the agent during the automated run.</p>
+                  {/* Right Column: Readiness and Knowledge */}
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold border-b border-border pb-2">Intelligence & Readiness</h3>
+                    {workflowState ? (
+                      <DecisionReadiness workflowState={workflowState} />
+                    ) : null}
+                    
+                    {/* Semantic Search Box */}
+                    <div className="bg-card border border-border rounded-xl p-5 shadow-sm space-y-4">
+                      <div>
+                        <h3 className="text-sm font-semibold text-foreground">Interactive Semantic Search</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">Query the organization's vector base for real-time playbooks or documentation matches.</p>
+                      </div>
+                      
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                        <input 
+                          type="text" 
+                          value={knowledgeSearchQuery}
+                          onChange={(e) => setKnowledgeSearchQuery(e.target.value)}
+                          onKeyDown={handleKnowledgeSearch}
+                          placeholder="Ask a question or search playbooks..." 
+                          className="w-full bg-background border border-border rounded-lg py-2 pl-10 pr-4 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        />
+                      </div>
+
+                      {/* Search Results */}
+                      {isKnowledgeSearching ? (
+                        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground text-xs">
+                          <Loader2 className="animate-spin mb-2" size={24} />
+                          <p>Searching semantic embeddings...</p>
+                        </div>
+                      ) : knowledgeSearchResults ? (
+                        <div className="space-y-3 mt-2 border-t border-border/50 pt-4">
+                          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Search Results ({knowledgeSearchResults.knowledge_results?.length ?? 0})</h4>
+                          {knowledgeSearchResults.knowledge_results?.map((item: any, i: number) => (
+                            <div key={i} className="p-3.5 rounded-lg border border-border bg-secondary/30 text-xs space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="font-semibold text-primary">{item.document_name}</span>
+                                <span className="text-[10px] text-muted-foreground bg-secondary px-2 py-0.5 rounded">Match: {(item.similarity_score * 100).toFixed(0)}%</span>
+                              </div>
+                              <p className="text-foreground leading-relaxed font-mono bg-card border border-border/40 p-2.5 rounded whitespace-pre-wrap">{item.content}</p>
+                            </div>
+                          ))}
+                          {(!knowledgeSearchResults.knowledge_results || knowledgeSearchResults.knowledge_results.length === 0) && (
+                            <p className="text-center text-muted-foreground text-xs py-4">No matching playbooks or documents found.</p>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
 
-                    {workflowState.knowledge_artifact?.payload
-                      ? (
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs text-muted-foreground">
-                              {workflowState.knowledge_artifact.payload.knowledge_results.length} evidence chunks retrieved
-                              · confidence <strong>{(workflowState.knowledge_artifact.payload.confidence_score * 100).toFixed(0)}%</strong>
-                            </p>
-                          </div>
-                          {workflowState.knowledge_artifact.payload.knowledge_results.length === 0
-                            ? <p className="text-sm text-muted-foreground py-8 text-center">No knowledge retrieved for this workflow. Upload playbooks to the Knowledge Base to improve results.</p>
-                            : workflowState.knowledge_artifact.payload.knowledge_results.map((r: any) => (
-                              <div key={r.id} className="bg-secondary/20 border border-border/80 rounded-xl p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{r.citation}</span>
-                                  <span className="text-xs font-bold text-foreground">{(r.similarity_score * 100).toFixed(0)}% match</span>
+                    {/* Original Run Results */}
+                    <div className="bg-card border border-border rounded-xl p-5 shadow-sm space-y-4">
+                      <div>
+                        <h3 className="text-sm font-semibold text-foreground">Pipeline Retrieval Evidence</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">The exact context chunks collected by the agent during the automated run.</p>
+                      </div>
+
+                      {workflowState.knowledge_artifact?.payload
+                        ? (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs text-muted-foreground">
+                                {workflowState.knowledge_artifact.payload.knowledge_results.length} evidence chunks retrieved
+                                · confidence <strong>{(workflowState.knowledge_artifact.payload.confidence_score * 100).toFixed(0)}%</strong>
+                              </p>
+                            </div>
+                            {workflowState.knowledge_artifact.payload.knowledge_results.length === 0
+                              ? <p className="text-sm text-muted-foreground py-8 text-center">No knowledge retrieved for this workflow. Upload playbooks to the Knowledge Base to improve results.</p>
+                              : workflowState.knowledge_artifact.payload.knowledge_results.map((r: any) => (
+                                <div key={r.id} className="bg-secondary/20 border border-border/80 rounded-xl p-4">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{r.citation}</span>
+                                    <span className="text-xs font-bold text-foreground">{(r.similarity_score * 100).toFixed(0)}% match</span>
+                                  </div>
+                                  <p className="text-xs text-foreground leading-relaxed font-mono bg-background p-3 rounded-lg border border-border whitespace-pre-wrap">{r.content}</p>
                                 </div>
-                                <p className="text-xs text-foreground leading-relaxed font-mono bg-background p-3 rounded-lg border border-border whitespace-pre-wrap">{r.content}</p>
-                              </div>
-                            ))
-                          }
-                        </div>
-                      )
-                      : <EmptyTab label="Knowledge" />
-                    }
+                              ))
+                            }
+                          </div>
+                        )
+                        : <EmptyTab label="Knowledge" />
+                      }
+                    </div>
                   </div>
                 </div>
               )}
 
-              {activeTab === "decision" && (
-                workflowState.decision_artifact?.payload
-                  ? <DecisionDashboard decisionPackage={workflowState.decision_artifact.payload} />
-                  : <EmptyTab label="Decision" />
+              {activeTab === "decision_intelligence" && (
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+                  {/* Left (Main): Decision */}
+                  <div className="xl:col-span-2 space-y-6">
+                    <h3 className="text-lg font-semibold border-b border-border pb-2">Primary Decision Engine</h3>
+                    {workflowState.decision_artifact?.payload ? (
+                      <DecisionDashboard decisionPackage={workflowState.decision_artifact.payload} />
+                    ) : (
+                      <EmptyTab label="Decision" />
+                    )}
+                  </div>
+
+                  {/* Right: Devil's Advocate & What-If */}
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold border-b border-border pb-2">Risk & Alternatives</h3>
+                    {workflowState.decision_artifact?.payload ? (
+                      <div className="space-y-6">
+                        <DevilsAdvocate decisionPackage={workflowState.decision_artifact.payload} />
+                        <WhatIfSimulator decisionPackage={workflowState.decision_artifact.payload} />
+                      </div>
+                    ) : (
+                      <EmptyTab label="Decision (required for analysis)" />
+                    )}
+                  </div>
+                </div>
               )}
 
-              {activeTab === "advocate" && (
-                workflowState.decision_artifact?.payload
-                  ? (
-                    <FeatureGate label="Devil's Advocate">
-                      <DevilsAdvocate decisionPackage={workflowState.decision_artifact.payload} />
-                    </FeatureGate>
-                  )
-                  : <EmptyTab label="Decision (required for Devil's Advocate)" />
+              {activeTab === "strategy_governance" && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                  {/* Left: Strategy */}
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold border-b border-border pb-2">Execution Strategy</h3>
+                    {workflowState.strategy_artifact?.payload ? (
+                      <StrategyDashboard strategyPackage={workflowState.strategy_artifact.payload} />
+                    ) : (
+                      <EmptyTab label="Strategy" />
+                    )}
+                  </div>
+
+                  {/* Right: Reflection & Approval */}
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold border-b border-border pb-2">Governance & Review</h3>
+                    
+                    {workflowState.reflection_artifact ? (
+                      <ReflectionDashboard
+                        reflectionArtifact={workflowState.reflection_artifact}
+                        apiBaseUrl={API_BASE_URL}
+                      />
+                    ) : (
+                      <EmptyTab label="Reflection" />
+                    )}
+
+                    {workflowState.approval_artifact ? (
+                      <ApprovalDashboard
+                        workflowState={workflowState}
+                        apiBaseUrl={API_BASE_URL}
+                        onApprovalComplete={() => setApprovalCompleted(true)}
+                      />
+                    ) : (
+                      <EmptyTab label="Approval" />
+                    )}
+                  </div>
+                </div>
               )}
 
-              {activeTab === "simulator" && (
-                workflowState.decision_artifact?.payload
-                  ? (
-                    <FeatureGate label="What-If Simulator">
-                      <WhatIfSimulator decisionPackage={workflowState.decision_artifact.payload} />
-                    </FeatureGate>
-                  )
-                  : <EmptyTab label="Decision (required for Simulator)" />
-              )}
+              {activeTab === "review_learning" && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                  {/* Left: Report */}
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold border-b border-border pb-2">Executive Report</h3>
+                    <ExecutiveReport workflowState={workflowState} />
+                  </div>
 
-              {activeTab === "strategy" && (
-                workflowState.strategy_artifact?.payload
-                  ? <StrategyDashboard strategyPackage={workflowState.strategy_artifact.payload} />
-                  : <EmptyTab label="Strategy" />
-              )}
-
-              {activeTab === "reflection" && (
-                workflowState.reflection_artifact
-                  ? <ReflectionDashboard
-                      reflectionArtifact={workflowState.reflection_artifact}
-                      apiBaseUrl={API_BASE_URL}
-                    />
-                  : <EmptyTab label="Reflection" />
-              )}
-
-              {activeTab === "approval" && (
-                workflowState.approval_artifact
-                  ? <ApprovalDashboard
-                      workflowState={workflowState}
-                      apiBaseUrl={API_BASE_URL}
-                      onApprovalComplete={() => setApprovalCompleted(true)}
-                    />
-                  : <EmptyTab label="Approval" />
-              )}
-
-              {activeTab === "learning" && (
-                workflowState.learning_artifact
-                  ? <LearningDashboard workflowState={workflowState} />
-                  : <EmptyTab label="Learning" />
-              )}
-
-              {/* ── Tool tabs ─────────────────────────────────────────────── */}
-              {activeTab === "report" && (
-                <FeatureGate label="Executive Report">
-                  <ExecutiveReport workflowState={workflowState} />
-                </FeatureGate>
-              )}
-
-              {activeTab === "inspector" && (
-                <Inspector state={workflowState} />
-              )}
-
-              {activeTab === "logs" && (
-                <LogStream
-                  logs={workflowState.execution_logs ?? []}
-                  events={workflowState.workflow_events ?? []}
-                />
+                  {/* Right: Learning */}
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold border-b border-border pb-2">Agent Learning</h3>
+                    {workflowState.learning_artifact ? (
+                      <LearningDashboard workflowState={workflowState} />
+                    ) : (
+                      <EmptyTab label="Learning" />
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           )}
