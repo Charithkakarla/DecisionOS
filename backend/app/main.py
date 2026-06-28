@@ -15,6 +15,7 @@ from app.agents.approval.router import router as approval_router
 from app.agents.learning.router import router as learning_router
 from app.agents.workflows.router import router as workflows_router
 from app.agents.dashboard.router import router as dashboard_router
+from app.modules.transcripts.router import router as transcripts_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -46,6 +47,7 @@ app.include_router(approval_router)
 app.include_router(learning_router)
 app.include_router(workflows_router)
 app.include_router(dashboard_router)
+app.include_router(transcripts_router)
 
 
 @app.get("/health")

@@ -2,14 +2,20 @@
 import uuid
 import datetime
 import logging
+import os
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, text, Float, JSON, select, delete, func
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.dialects.postgresql import UUID
-from pgvector.sqlalchemy import Vector
+from qdrant_client import AsyncQdrantClient
+from qdrant_client.http import models
 
 logger = logging.getLogger("decision_os.knowledge.repository")
 
 Base = declarative_base()
+
+QDRANT_HOST = os.environ.get("QDRANT_HOST", "localhost")
+qdrant = AsyncQdrantClient(host=QDRANT_HOST, port=6333)
+QDRANT_COLLECTION = "knowledge_chunks"
 
 # --- Legacy Knowledge Domain Tables ---
 class DBDocument(Base):
@@ -35,7 +41,7 @@ class DBDocumentChunk(Base):
     content = Column(String, nullable=False)
     page = Column(Integer, nullable=True)
     section = Column(String, nullable=True)
-    embedding = Column(Vector(768), nullable=False)  # Storing embedding directly inside document_chunks
+    # Removed pgvector embedding column. Vector is now stored in Qdrant.
 
 class DBMetric(Base):
     __tablename__ = "metrics"
@@ -117,14 +123,23 @@ class DBAuditLog(Base):
 async def init_db(engine) -> None:
     logger.info("Initializing knowledge database tables...")
     async with engine.begin() as conn:
-        if "postgresql" in str(engine.url):
-            try:
-                await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-                logger.info("pgvector extension verified/enabled.")
-            except Exception as e:
-                logger.error(f"Failed to create pgvector extension: {e}")
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables initialized successfully.")
+    
+    # Initialize Qdrant collection
+    try:
+        collections = await qdrant.get_collections()
+        if QDRANT_COLLECTION not in [col.name for col in collections.collections]:
+            await qdrant.create_collection(
+                collection_name=QDRANT_COLLECTION,
+                vectors_config=models.VectorParams(
+                    size=768, 
+                    distance=models.Distance.COSINE
+                )
+            )
+            logger.info(f"Qdrant collection {QDRANT_COLLECTION} created.")
+    except Exception as e:
+        logger.error(f"Failed to initialize Qdrant collection: {e}")
 
 
 async def save_document(
@@ -159,19 +174,47 @@ async def update_document_status(session, doc_id: uuid.UUID, status: str, error_
 
 async def save_chunks(session, doc_id: uuid.UUID, chunks: list[dict]) -> None:
     db_chunks = []
+    points = []
+    
     for chunk in chunks:
+        chunk_id = uuid.uuid4()
+        
+        # Save to Postgres
         db_chunk = DBDocumentChunk(
-            id=uuid.uuid4(),
+            id=chunk_id,
             document_id=doc_id,
             chunk_index=chunk["chunk_index"],
             content=chunk["content"],
             page=chunk["page"],
             section=chunk["section"],
-            embedding=chunk["embedding"]
         )
         db_chunks.append(db_chunk)
+        
+        # Save to Qdrant
+        points.append(
+            models.PointStruct(
+                id=str(chunk_id),
+                vector=chunk["embedding"],
+                payload={
+                    "document_id": str(doc_id),
+                    "chunk_index": chunk["chunk_index"],
+                }
+            )
+        )
+        
     session.add_all(db_chunks)
     await session.commit()
+    
+    # Upload to Qdrant
+    if points:
+        try:
+            await qdrant.upsert(
+                collection_name=QDRANT_COLLECTION,
+                points=points
+            )
+        except Exception as e:
+            logger.error(f"Failed to upsert points to Qdrant: {e}")
+            raise
 
 
 async def list_documents(session) -> list[DBDocument]:
@@ -183,22 +226,63 @@ async def delete_document(session, doc_id: uuid.UUID) -> bool:
     db_doc = await session.get(DBDocument, doc_id)
     if not db_doc:
         return False
+        
+    # Delete from Qdrant
+    try:
+        await qdrant.delete(
+            collection_name=QDRANT_COLLECTION,
+            points_selector=models.Filter(
+                must=[
+                    models.FieldCondition(
+                        key="document_id",
+                        match=models.MatchValue(value=str(doc_id))
+                    )
+                ]
+            )
+        )
+    except Exception as e:
+        logger.error(f"Failed to delete document chunks from Qdrant: {e}")
+        
     await session.delete(db_doc)
     await session.commit()
     return True
 
 
 async def search_semantic(session, query_embedding: list[float], limit: int = 5) -> list[tuple[DBDocumentChunk, DBDocument, float]]:
-    distance = DBDocumentChunk.embedding.cosine_distance(query_embedding)
-    stmt = (
-        select(DBDocumentChunk, DBDocument, (1.0 - distance).label("similarity"))
-        .join(DBDocument, DBDocument.id == DBDocumentChunk.document_id)
-        .where(DBDocument.status == "completed")
-        .order_by(distance.asc())
-        .limit(limit)
-    )
-    result = await session.execute(stmt)
-    return list(result.all())
+    try:
+        search_result = await qdrant.search(
+            collection_name=QDRANT_COLLECTION,
+            query_vector=query_embedding,
+            limit=limit,
+            with_payload=False
+        )
+        
+        if not search_result:
+            return []
+            
+        chunk_ids = [uuid.UUID(point.id) for point in search_result]
+        scores = {uuid.UUID(point.id): point.score for point in search_result}
+        
+        stmt = (
+            select(DBDocumentChunk, DBDocument)
+            .join(DBDocument, DBDocument.id == DBDocumentChunk.document_id)
+            .where(DBDocumentChunk.id.in_(chunk_ids))
+            .where(DBDocument.status == "completed")
+        )
+        
+        result = await session.execute(stmt)
+        rows = list(result.all())
+        
+        # Sort by qdrant score
+        scored_rows = [
+            (chunk, doc, scores[chunk.id]) for chunk, doc in rows
+        ]
+        scored_rows.sort(key=lambda x: x[2], reverse=True)
+        
+        return scored_rows
+    except Exception as e:
+        logger.error(f"Semantic search failed: {e}")
+        return []
 
 
 async def search_fts(session, keyword_query: str, limit: int = 5) -> list[tuple[DBDocumentChunk, DBDocument, float]]:

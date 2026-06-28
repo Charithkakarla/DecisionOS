@@ -65,5 +65,35 @@ export const api = {
       if (!response.ok) throw new Error("Failed to get dashboard metrics");
       return response.json();
     }
+  },
+
+  approval: {
+    submit: async (data: { workflow_id: string, execution_id: string, reviewer: string, approval_comments?: string, approval_reason?: string, approval_confidence?: number, business_owner?: string, department?: string, review_duration_seconds?: number, feedback_items?: string[], state_snapshot: any }) => {
+      const response = await fetch(`${API_BASE_URL}/approval/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("Approval submission failed");
+      return response.json();
+    },
+    reject: async (data: { workflow_id: string, execution_id: string, reviewer: string, approval_comments?: string, approval_reason?: string, business_owner?: string, department?: string, feedback_items?: string[], state_snapshot: any }) => {
+      const response = await fetch(`${API_BASE_URL}/approval/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("Approval rejection failed");
+      return response.json();
+    },
+    modify: async (data: { workflow_id: string, execution_id: string, reviewer: string, approval_comments?: string, modified_sections: any, approval_confidence?: number, business_owner?: string, department?: string, review_duration_seconds?: number, feedback_items?: string[], state_snapshot: any }) => {
+      const response = await fetch(`${API_BASE_URL}/approval/modify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("Approval modification failed");
+      return response.json();
+    }
   }
 };
