@@ -1,8 +1,9 @@
 // Contains: KnowledgeDashboard.tsx implementation.
 import { useState, useEffect } from "react";
 import { EvidencePackage } from "../types/agent";
+import { api } from "../lib/api";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
 
 interface DocumentInfo {
   id: string;
@@ -53,33 +54,30 @@ export default function KnowledgeDashboard() {
   const [searchResults, setSearchResults] = useState<EvidencePackage | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
 
-  // Load docs and metrics on load and poll status if any document is processing
+  // Load docs and metrics once on mount
   useEffect(() => {
     fetchDocsAndMetrics();
+  }, []);
+
+  // Poll only while at least one document is still processing
+  useEffect(() => {
+    const hasProcessing = documents.some((doc) => doc.status === "processing");
+    if (!hasProcessing) return;
+
     const interval = setInterval(() => {
-      // Check if any document is still processing
-      const hasProcessing = documents.some((doc) => doc.status === "processing");
-      if (hasProcessing) {
-        fetchDocsAndMetrics();
-      }
+      fetchDocsAndMetrics();
     }, 3000);
     return () => clearInterval(interval);
   }, [documents]);
 
   const fetchDocsAndMetrics = async () => {
     try {
-      const [docsRes, metricsRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/v1/knowledge/documents`),
-        fetch(`${API_BASE_URL}/api/v1/knowledge/metrics`),
+      const [docsData, metricsData] = await Promise.all([
+        api.knowledge.getDocuments(),
+        api.knowledge.getMetrics(),
       ]);
-      if (docsRes.ok) {
-        const docsData = await docsRes.json();
-        setDocuments(docsData);
-      }
-      if (metricsRes.ok) {
-        const metricsData = await metricsRes.json();
-        setMetrics(metricsData);
-      }
+      setDocuments(docsData);
+      setMetrics(metricsData);
     } catch (e) {
       console.error("Failed to load documents or metrics", e);
     }
@@ -104,7 +102,7 @@ export default function KnowledgeDashboard() {
     if (tags) formData.append("tags", tags);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/knowledge/upload`, {
+      const response = await fetch(`${API_BASE_URL}/knowledge/upload`, {
         method: "POST",
         body: formData,
       });
@@ -135,7 +133,7 @@ export default function KnowledgeDashboard() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this document?")) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/knowledge/documents/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/knowledge/documents/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -166,7 +164,7 @@ export default function KnowledgeDashboard() {
     };
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/knowledge/search`, {
+      const response = await fetch(`${API_BASE_URL}/knowledge/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

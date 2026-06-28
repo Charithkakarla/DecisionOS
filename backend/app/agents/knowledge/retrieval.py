@@ -4,14 +4,6 @@ from app.agents.knowledge.repository import search_semantic, search_fts
 
 logger = logging.getLogger("decision_os.knowledge.retrieval")
 
-def cosine_similarity(v1: list[float], v2: list[float]) -> float:
-    dot = sum(x * y for x, y in zip(v1, v2))
-    m1 = sum(x * x for x in v1) ** 0.5
-    m2 = sum(x * x for x in v2) ** 0.5
-    if m1 == 0 or m2 == 0:
-        return 0.0
-    return dot / (m1 * m2)
-
 async def perform_hybrid_search(
     session, query_text: str, query_embedding: list[float],
     department: str | None = None, owner: str | None = None,
@@ -48,12 +40,13 @@ async def perform_hybrid_search(
         if chunk.id in blended:
             blended[chunk.id]["fts_score"] = fts_score
         else:
-            # For pure keyword hits, calculate semantic score in python
-            similarity = cosine_similarity(chunk.embedding, query_embedding)
+            # For pure keyword hits (not in semantic results), we don't have the vector
+            # locally since embeddings are stored in Qdrant only. Assign semantic_score=0.0
+            # so the FTS score alone drives ranking for these results.
             blended[chunk.id] = {
                 "chunk": chunk,
                 "doc": doc,
-                "semantic_score": similarity,
+                "semantic_score": 0.0,
                 "fts_score": fts_score
             }
             

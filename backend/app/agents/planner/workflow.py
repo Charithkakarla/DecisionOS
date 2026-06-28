@@ -3,6 +3,8 @@ from app.schemas.state import WorkflowState
 from app.core.database import SessionLocal
 from app.agents.knowledge.repository import DBWorkflowRun
 import uuid
+import json
+import datetime
 
 from fastapi import HTTPException
 import traceback
@@ -15,20 +17,27 @@ async def run_workflow(state: WorkflowState) -> WorkflowState:
             session.add(db_run)
             await session.commit()
             run_id = db_run.id
-        
+
         # 2. Execute Planner
         planner = PlannerService()
         final_state = await planner.execute(state)
-        
-        # 3. Update Status
+
+        # 3. Persist full WorkflowState as JSON
         async with SessionLocal() as session:
             db_run = await session.get(DBWorkflowRun, run_id)
             if db_run:
                 db_run.status = "completed"
+                db_run.completed_at = datetime.datetime.utcnow()
+                # Store full state in payload column
+                try:
+                    db_run.payload = json.loads(final_state.model_dump_json())
+                except Exception:
+                    db_run.payload = {}
                 await session.commit()
-                
+
         return final_state
     except Exception as e:
+        # Mark run as failed
         error_msg = f"Error in run_workflow: {str(e)}\n{traceback.format_exc()}"
         print(error_msg)
         raise HTTPException(status_code=500, detail=error_msg)

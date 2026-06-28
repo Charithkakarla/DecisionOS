@@ -9,6 +9,7 @@ from pathlib import Path
 
 from app.contracts.strategy import StrategyAgent
 from app.core.config import settings
+from app.core.provider_utils import is_retryable_error, log_fallback
 from app.schemas.state import (
     WorkflowState,
     StrategyPackage,
@@ -47,6 +48,16 @@ def _build_provider() -> StrategyProvider:
         )
     logger.warning("No LLM key found or provider is mock. Falling back to MockStrategyProvider.")
     return MockStrategyProvider()
+
+
+def _grok_provider() -> StrategyProvider | None:
+    if settings.grok_api_key:
+        return GrokStrategyProvider(
+            api_key=settings.grok_api_key,
+            model=settings.grok_model,
+            base_url=settings.grok_base_url,
+        )
+    return None
 
 
 def _parse_execution_phases(raw_plan: list) -> list[ExecutionPhase]:
@@ -186,12 +197,29 @@ class StrategyService(StrategyAgent):
                     system_prompt=system_prompt, user_prompt=user_prompt
                 )
             except Exception as exc:
-                logger.error(f"Provider {provider_used} failed: {exc}. Falling back to mock.")
-                state.execution_logs.append(f"strategy: provider fallback triggered ({exc})")
-                raw_strategy = await MockStrategyProvider().generate_strategy(
-                    system_prompt=system_prompt, user_prompt=user_prompt
-                )
-                provider_used = "MockStrategyProvider (fallback)"
+                if is_retryable_error(exc):
+                    grok = _grok_provider()
+                    if grok:
+                        log_fallback("strategy", provider_used, "GrokStrategyProvider", exc)
+                        state.execution_logs.append("strategy: Gemini quota exceeded — falling back to Grok")
+                        raw_strategy = await grok.generate_strategy(
+                            system_prompt=system_prompt, user_prompt=user_prompt
+                        )
+                        provider_used = "GrokStrategyProvider"
+                    else:
+                        log_fallback("strategy", provider_used, "MockStrategyProvider", exc)
+                        state.execution_logs.append(f"strategy: provider fallback triggered ({exc})")
+                        raw_strategy = await MockStrategyProvider().generate_strategy(
+                            system_prompt=system_prompt, user_prompt=user_prompt
+                        )
+                        provider_used = "MockStrategyProvider (fallback)"
+                else:
+                    log_fallback("strategy", provider_used, "MockStrategyProvider", exc)
+                    state.execution_logs.append(f"strategy: provider fallback triggered ({exc})")
+                    raw_strategy = await MockStrategyProvider().generate_strategy(
+                        system_prompt=system_prompt, user_prompt=user_prompt
+                    )
+                    provider_used = "MockStrategyProvider (fallback)"
 
             # ── Step 5: Parse execution plan ───────────────────────────────────
             raw_phases = raw_strategy.get("execution_plan") or []

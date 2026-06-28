@@ -80,6 +80,7 @@ class DBWorkflowRun(Base):
     status = Column(String, default="running")  # running, completed, failed
     started_at = Column(DateTime, default=datetime.datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
+    payload = Column(JSON, nullable=True)  # full WorkflowState JSON
 
 class DBArtifact(Base):
     __tablename__ = "artifacts"
@@ -124,6 +125,25 @@ async def init_db(engine) -> None:
     logger.info("Initializing knowledge database tables...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+        # Add payload column to workflow_runs if it doesn't exist (migration)
+        try:
+            dialect = engine.dialect.name
+            if dialect == "postgresql":
+                await conn.execute(text(
+                    "ALTER TABLE workflow_runs ADD COLUMN IF NOT EXISTS payload JSONB"
+                ))
+            else:
+                # SQLite: check if column exists first
+                result = await conn.execute(text("PRAGMA table_info(workflow_runs)"))
+                cols = [row[1] for row in result.fetchall()]
+                if "payload" not in cols:
+                    await conn.execute(text(
+                        "ALTER TABLE workflow_runs ADD COLUMN payload JSON"
+                    ))
+        except Exception as col_err:
+            logger.warning(f"Column migration skipped: {col_err}")
+
     logger.info("Database tables initialized successfully.")
     
     # Initialize Qdrant collection

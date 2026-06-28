@@ -33,6 +33,14 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Hyphenated names for class usage: status-success, status-success-bg, etc.
+        "status-success": "hsl(var(--status-success))",
+        "status-success-bg": "hsl(var(--status-success-bg))",
+        "status-warning": "hsl(var(--status-warning))",
+        "status-warning-bg": "hsl(var(--status-warning-bg))",
+        "status-error": "hsl(var(--status-error))",
+        "status-error-bg": "hsl(var(--status-error-bg))",
+        // Also keep camelCase aliases for backward compat
         status: {
           success: "hsl(var(--status-success))",
           successBg: "hsl(var(--status-success-bg))",

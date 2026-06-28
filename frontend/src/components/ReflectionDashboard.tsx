@@ -1,301 +1,207 @@
-// Contains: ReflectionDashboard.tsx implementation.
 import { useState, useEffect } from "react";
 import { ReflectionArtifact } from "../types/agent";
+import { CheckCircle2, XCircle, AlertTriangle, Info, ChevronRight } from "lucide-react";
 
 interface ReflectionDashboardProps {
   reflectionArtifact: ReflectionArtifact;
   apiBaseUrl: string;
 }
 
+const CIRC = 251.2;
+
+function ScoreRing({ value, color, label, sublabel }: { value: number; color: string; label: string; sublabel: string }) {
+  const offset = CIRC - CIRC * Math.min(value, 1);
+  return (
+    <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col items-center text-center gap-2">
+      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</span>
+      <div className="relative flex items-center justify-center my-1">
+        <svg className="w-24 h-24 -rotate-90">
+          <circle cx="48" cy="48" r="40" stroke="hsl(220,10%,88%)" strokeWidth="6" fill="transparent" />
+          <circle cx="48" cy="48" r="40" stroke={color} strokeWidth="6" fill="transparent"
+            strokeDasharray={CIRC} strokeDashoffset={offset} strokeLinecap="round"
+            className="transition-all duration-700" />
+        </svg>
+        <span className="absolute text-xl font-bold text-foreground">{(value * 100).toFixed(0)}%</span>
+      </div>
+      <span className="text-[10px] text-muted-foreground italic">{sublabel}</span>
+    </div>
+  );
+}
+
 export default function ReflectionDashboard({ reflectionArtifact, apiBaseUrl }: ReflectionDashboardProps) {
   const { payload, created_at, schema_version, provider, workflow_id } = reflectionArtifact;
-  const [expandedSection, setExpandedSection] = useState<"audit" | "findings" | "suggestions" | "report">("audit");
-  const [reportData, setReportData] = useState<any | null>(null);
+  const [tab, setTab] = useState<"audit" | "findings" | "suggestions" | "report">("audit");
+  const [reportData, setReportData] = useState<any>(null);
   const [loadingReport, setLoadingReport] = useState(false);
 
-  // Fetch Workflow Report preview on mount/refresh
   useEffect(() => {
-    const fetchReport = async () => {
-      setLoadingReport(true);
-      try {
-        const response = await fetch(`${apiBaseUrl}/api/v1/reflection/report/${workflow_id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setReportData(data);
-        }
-      } catch (err) {
-        console.error("Failed to load workflow report:", err);
-      } finally {
-        setLoadingReport(false);
-      }
-    };
-    fetchReport();
+    setLoadingReport(true);
+    fetch(`${apiBaseUrl}/api/v1/reflection/report/${workflow_id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => setReportData(d))
+      .catch(() => {})
+      .finally(() => setLoadingReport(false));
   }, [workflow_id, apiBaseUrl]);
 
-  const getScoreColorClass = (score: number, invert = false) => {
-    if (invert) {
-      if (score >= 0.6) return "text-rose-400";
-      if (score >= 0.3) return "text-amber-400";
-      return "text-emerald-400";
-    } else {
-      if (score >= 0.8) return "text-emerald-400";
-      if (score >= 0.5) return "text-amber-400";
-      return "text-rose-400";
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    if (status === "passed") {
-      return (
-        <span className="px-3 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold uppercase tracking-wider">
-          Validation Passed
-        </span>
-      );
-    }
-    return (
-      <span className="px-3 py-1 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-semibold uppercase tracking-wider animate-pulse">
-        Validation Failed
-      </span>
-    );
-  };
+  const tabs = [
+    { id: "audit" as const,       label: "Explainability"    },
+    { id: "findings" as const,    label: `Findings (${payload.critical_findings.length + payload.warnings.length + payload.unsupported_claims.length})` },
+    { id: "suggestions" as const, label: `Suggestions (${payload.improvement_suggestions.length})` },
+    { id: "report" as const,      label: "Report Preview" },
+  ];
 
   return (
-    <div className="space-y-6">
-      
-      {/* Top Info Banner */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-950 text-slate-400 px-4 py-2.5 rounded-xl border border-slate-800 text-[11px] gap-2">
-        <div>Governance Schema Version: <strong>{schema_version}</strong></div>
-        <div>Auditor Provider: <span className="font-mono text-cyan-400">{provider}</span></div>
-        <div>Validated At: <strong>{created_at}</strong></div>
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Meta bar */}
+      <div className="flex flex-wrap gap-4 text-xs bg-secondary/40 border border-border rounded-lg px-4 py-2.5 text-muted-foreground">
+        <span>Schema: <strong className="text-foreground">{schema_version}</strong></span>
+        <span>Provider: <span className="font-mono text-primary">{provider}</span></span>
+        <span>Validated: <strong className="text-foreground">{created_at}</strong></span>
+        <span className="ml-auto">
+          {payload.validation_status === "passed"
+            ? <span className="flex items-center gap-1 text-status-success font-semibold"><CheckCircle2 size={12} /> Validation Passed</span>
+            : <span className="flex items-center gap-1 text-status-error font-semibold animate-pulse"><XCircle size={12} /> Validation Failed</span>
+          }
+        </span>
       </div>
 
-      {/* Main Validation Ring Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        {/* Trust Score */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 shadow-sm flex flex-col justify-between items-center text-center">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Overall Trust Rating</span>
-          <div className="relative my-4 flex items-center justify-center">
-            <svg className="w-24 h-24 transform -rotate-90">
-              <circle cx="48" cy="48" r="40" stroke="#1e293b" strokeWidth="6" fill="transparent" />
-              <circle cx="48" cy="48" r="40" stroke="#10b981" strokeWidth="6" fill="transparent"
-                strokeDasharray={251.2}
-                strokeDashoffset={251.2 - (251.2 * payload.overall_trust_score)}
-              />
-            </svg>
-            <span className="absolute text-xl font-bold text-slate-200">{(payload.overall_trust_score * 100).toFixed(0)}%</span>
-          </div>
-          <span className="text-[10px] text-slate-400 mt-1 italic">Calculated deterministically from 7 validation parameters</span>
+      {/* Score rings */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <ScoreRing value={payload.overall_trust_score}      color="#10b981" label="Trust Score"        sublabel="7-parameter validation" />
+        <ScoreRing value={payload.governance_score}         color="#3b82f6" label="Governance"         sublabel="Audit & compliance" />
+        <ScoreRing value={payload.explainability_score}     color="#8b5cf6" label="Explainability"     sublabel="Rationale completeness" />
+        <div className="bg-card border border-border rounded-xl p-4 shadow-sm space-y-3 flex flex-col justify-center">
+          {[
+            { label: "Evidence Coverage",      v: payload.evidence_coverage,           color: "bg-emerald-500" },
+            { label: "Strategy Consistency",   v: payload.strategy_consistency_score,  color: "bg-sky-500"     },
+            { label: "Hallucination Risk",     v: payload.hallucination_risk,           color: payload.hallucination_risk > 0.4 ? "bg-rose-500" : "bg-amber-400", invert: true },
+          ].map(({ label, v, color, invert }) => (
+            <div key={label}>
+              <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                <span>{label}</span>
+                <span className={`font-bold ${invert ? (v > 0.4 ? "text-status-error" : "text-status-warning") : "text-foreground"}`}>{(v * 100).toFixed(0)}%</span>
+              </div>
+              <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                <div className={`h-full ${color} rounded-full`} style={{ width: `${v * 100}%` }} />
+              </div>
+            </div>
+          ))}
         </div>
-
-        {/* Governance Compliance */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 shadow-sm flex flex-col justify-between items-center text-center">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Governance Adherence</span>
-          <div className="relative my-4 flex items-center justify-center">
-            <svg className="w-24 h-24 transform -rotate-90">
-              <circle cx="48" cy="48" r="40" stroke="#1e293b" strokeWidth="6" fill="transparent" />
-              <circle cx="48" cy="48" r="40" stroke="#3b82f6" strokeWidth="6" fill="transparent"
-                strokeDasharray={251.2}
-                strokeDashoffset={251.2 - (251.2 * payload.governance_score)}
-              />
-            </svg>
-            <span className="absolute text-xl font-bold text-slate-200">{(payload.governance_score * 100).toFixed(0)}%</span>
-          </div>
-          <span className="text-[10px] text-slate-400 mt-1">Audit logs, schema match & trace completeness</span>
-        </div>
-
-        {/* Explainability Index */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 shadow-sm flex flex-col justify-between items-center text-center">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Explainability Index</span>
-          <div className="relative my-4 flex items-center justify-center">
-            <svg className="w-24 h-24 transform -rotate-90">
-              <circle cx="48" cy="48" r="40" stroke="#1e293b" strokeWidth="6" fill="transparent" />
-              <circle cx="48" cy="48" r="40" stroke="#8b5cf6" strokeWidth="6" fill="transparent"
-                strokeDasharray={251.2}
-                strokeDashoffset={251.2 - (251.2 * payload.explainability_score)}
-              />
-            </svg>
-            <span className="absolute text-xl font-bold text-slate-200">{(payload.explainability_score * 100).toFixed(0)}%</span>
-          </div>
-          <span className="text-[10px] text-slate-400 mt-1">Structured rationale & trace readability</span>
-        </div>
-
-        {/* Evidence Coverage & Hallucination Risk */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 shadow-sm space-y-4 flex flex-col justify-center">
-          <div>
-            <div className="flex justify-between text-xs text-slate-400 mb-1">
-              <span>Evidence Citations Coverage</span>
-              <span className="font-bold text-slate-200">{(payload.evidence_coverage * 100).toFixed(0)}%</span>
-            </div>
-            <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-              <div className="h-full bg-emerald-500" style={{ width: `${payload.evidence_coverage * 100}%` }}></div>
-            </div>
-          </div>
-          <div>
-            <div className="flex justify-between text-xs text-slate-400 mb-1">
-              <span>Strategy Consistency Score</span>
-              <span className="font-bold text-slate-200">{(payload.strategy_consistency_score * 100).toFixed(0)}%</span>
-            </div>
-            <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-              <div className="h-full bg-cyan-500" style={{ width: `${payload.strategy_consistency_score * 100}%` }}></div>
-            </div>
-          </div>
-          <div>
-            <div className="flex justify-between text-xs text-slate-400 mb-1">
-              <span>Factual Hallucination Risk</span>
-              <span className={`font-bold ${getScoreColorClass(payload.hallucination_risk, true)}`}>
-                {(payload.hallucination_risk * 100).toFixed(0)}%
-              </span>
-            </div>
-            <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-              <div className={`h-full ${payload.hallucination_risk > 0.4 ? "bg-rose-500" : "bg-amber-500"}`} style={{ width: `${payload.hallucination_risk * 100}%` }}></div>
-            </div>
-          </div>
-        </div>
-
       </div>
 
-      {/* Accordion Expandable Audit Verdict details */}
-      <div className="bg-slate-950 rounded-xl border border-slate-800 overflow-hidden shadow-lg">
-        <div className="flex justify-between items-center bg-slate-900/50 p-4 border-b border-slate-800">
-          <div className="flex items-center gap-3">
-            {getStatusBadge(payload.validation_status)}
-            <h3 className="font-bold text-slate-200">Executive Audit & Verification</h3>
-          </div>
-          <span className="text-xs text-slate-500">Validation Version {payload.validation_version}</span>
+      {/* Verdict + detail tabs */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+        <div className="px-5 py-4 border-b border-border bg-secondary/20">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Audit Verdict</p>
+          <p className="text-sm text-foreground font-medium">{payload.audit_summary}</p>
         </div>
 
-        <div className="p-4 space-y-4">
-          <div className="bg-slate-900 border border-slate-800/80 rounded-lg p-3">
-            <span className="text-[10px] font-bold text-slate-500 uppercase block tracking-wider mb-1">Audit Verdict Brief</span>
-            <p className="text-sm text-slate-200">{payload.audit_summary}</p>
-          </div>
+        {/* Tab bar */}
+        <div className="flex border-b border-border overflow-x-auto">
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                tab === t.id ? "border-primary text-primary bg-background" : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
 
-          {/* Tabular Accordion Controls */}
-          <div className="flex border-b border-slate-800 text-xs">
-            <button onClick={() => setExpandedSection("audit")} className={`px-4 py-2 border-b-2 font-bold ${expandedSection === "audit" ? "border-cyan-400 text-cyan-400" : "border-transparent text-slate-400"}`}>Executive Explainability</button>
-            <button onClick={() => setExpandedSection("findings")} className={`px-4 py-2 border-b-2 font-bold ${expandedSection === "findings" ? "border-cyan-400 text-cyan-400" : "border-transparent text-slate-400"}`}>Critical Findings ({payload.critical_findings.length + payload.warnings.length + payload.unsupported_claims.length})</button>
-            <button onClick={() => setExpandedSection("suggestions")} className={`px-4 py-2 border-b-2 font-bold ${expandedSection === "suggestions" ? "border-cyan-400 text-cyan-400" : "border-transparent text-slate-400"}`}>Governance Suggestions ({payload.improvement_suggestions.length})</button>
-            <button onClick={() => setExpandedSection("report")} className={`px-4 py-2 border-b-2 font-bold ${expandedSection === "report" ? "border-cyan-400 text-cyan-400" : "border-transparent text-slate-400"}`}>Report PDF Preview</button>
-          </div>
-
-          {/* Section 1: Explainability */}
-          {expandedSection === "audit" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="bg-slate-900/40 p-3 rounded border border-slate-900 space-y-2">
-                <p className="font-bold text-slate-300">Executive Analysis Summary</p>
-                <p className="text-slate-400">{payload.execution_metadata.explainability_summary}</p>
-                <hr className="border-slate-800" />
-                <p className="font-bold text-slate-300">Primary Choice Rationale</p>
-                <p className="text-slate-400">{payload.execution_metadata.why_selected}</p>
-              </div>
-              <div className="bg-slate-900/40 p-3 rounded border border-slate-900 space-y-2">
-                <p className="font-bold text-slate-300">Alternative Options Assessment</p>
-                <p className="text-slate-400">{payload.execution_metadata.why_alternatives_rejected}</p>
-                <hr className="border-slate-800" />
-                <p className="font-bold text-slate-300">Critical Evidence Influence</p>
-                <p className="text-slate-400">{payload.execution_metadata.evidence_influence}</p>
-              </div>
+        <div className="p-5">
+          {/* Explainability */}
+          {tab === "audit" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              {[
+                { label: "Analysis Summary",           val: payload.execution_metadata.explainability_summary },
+                { label: "Why This Strategy",          val: payload.execution_metadata.why_selected },
+                { label: "Alternatives Rejected",      val: payload.execution_metadata.why_alternatives_rejected },
+                { label: "Evidence Influence",         val: payload.execution_metadata.evidence_influence },
+              ].map(({ label, val }) => (
+                <div key={label} className="bg-secondary/30 border border-border rounded-lg p-3 space-y-1">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">{label}</p>
+                  <p className="text-foreground leading-relaxed text-xs">{val}</p>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Section 2: Critical Findings */}
-          {expandedSection === "findings" && (
-            <div className="space-y-3 text-xs">
+          {/* Findings */}
+          {tab === "findings" && (
+            <div className="space-y-2.5">
               {payload.critical_findings.length === 0 && payload.warnings.length === 0 && payload.unsupported_claims.length === 0 && (
-                <div className="text-slate-400 italic">No warnings or discrepancies detected by validator. Strategy is facts-aligned.</div>
+                <div className="flex items-center gap-2 text-status-success text-sm">
+                  <CheckCircle2 size={14} /> No warnings detected. Strategy is facts-aligned.
+                </div>
               )}
               {payload.critical_findings.map((f, i) => (
-                <div key={i} className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-2.5 rounded flex items-start gap-2">
-                  <span className="font-bold uppercase tracking-wider text-[8px] bg-rose-500 text-white px-1.5 py-0.5 rounded mt-0.5">Critical</span>
+                <div key={i} className="bg-status-error-bg border border-status-error/20 text-status-error p-3 rounded-lg flex items-start gap-2 text-xs">
+                  <span className="font-bold uppercase text-[9px] bg-status-error text-white px-1.5 py-0.5 rounded shrink-0 mt-0.5">Critical</span>
                   <span>{f}</span>
                 </div>
               ))}
               {payload.warnings.map((f, i) => (
-                <div key={i} className="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-2.5 rounded flex items-start gap-2">
-                  <span className="font-bold uppercase tracking-wider text-[8px] bg-amber-500 text-black px-1.5 py-0.5 rounded mt-0.5">Warning</span>
+                <div key={i} className="bg-status-warning-bg border border-status-warning/20 text-status-warning p-3 rounded-lg flex items-start gap-2 text-xs">
+                  <span className="font-bold uppercase text-[9px] bg-status-warning text-white px-1.5 py-0.5 rounded shrink-0 mt-0.5">Warning</span>
                   <span>{f}</span>
                 </div>
               ))}
               {payload.unsupported_claims.map((f, i) => (
-                <div key={i} className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-2.5 rounded flex items-start gap-2">
-                  <span className="font-bold uppercase tracking-wider text-[8px] bg-rose-500 text-white px-1.5 py-0.5 rounded mt-0.5">Unbacked</span>
+                <div key={i} className="bg-status-error-bg border border-status-error/20 text-status-error p-3 rounded-lg flex items-start gap-2 text-xs">
+                  <span className="font-bold uppercase text-[9px] bg-status-error text-white px-1.5 py-0.5 rounded shrink-0 mt-0.5">Unbacked</span>
                   <span>{f}</span>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Section 3: Suggestions */}
-          {expandedSection === "suggestions" && (
-            <div className="space-y-2 text-xs">
+          {/* Suggestions */}
+          {tab === "suggestions" && (
+            <div className="space-y-2">
               {payload.improvement_suggestions.map((f, i) => (
-                <div key={i} className="bg-slate-900 border border-slate-800 p-3 rounded flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-cyan-400"></div>
-                  <span className="text-slate-300">{f}</span>
+                <div key={i} className="flex items-center gap-2.5 bg-secondary/30 border border-border rounded-lg px-3 py-2 text-xs text-foreground">
+                  <ChevronRight size={12} className="text-primary shrink-0" />
+                  {f}
                 </div>
               ))}
-            </div>
-          )}
-
-          {/* Section 4: Workflow Report JSON Preview */}
-          {expandedSection === "report" && (
-            <div className="space-y-4 text-xs">
-              {loadingReport ? (
-                <div className="text-slate-400 animate-pulse italic">Compiling workflow report database values...</div>
-              ) : reportData ? (
-                <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 space-y-4">
-                  <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-                    <span className="font-bold text-cyan-400 text-sm">DecisionOS Executive Workflow Report</span>
-                    <span className="text-xs text-slate-500">ID: {reportData.workflow_id}</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="font-semibold text-slate-300">1. Executive Summary</p>
-                      <p className="text-slate-400 mt-1">{reportData.executive_summary}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-300">2. Final Strategic Outcome</p>
-                      <p className="text-slate-400 mt-1">{reportData.final_recommendation || "Strategy generation approved."}</p>
-                    </div>
-                  </div>
-
-                  <hr className="border-slate-800" />
-                  
-                  <div>
-                    <p className="font-semibold text-slate-300 mb-2">3. Supporting Playbook Evidence</p>
-                    {reportData.evidence_used.length === 0 ? (
-                      <p className="text-slate-500 italic">No document evidence linked.</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {reportData.evidence_used.map((ev: any, idx: number) => (
-                          <div key={idx} className="bg-slate-950 p-2 border border-slate-800 rounded">
-                            <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded mr-2 font-mono">
-                              {ev.document} • Page {ev.page}
-                            </span>
-                            <span className="text-slate-300 italic">"{ev.content_snippet}"</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <hr className="border-slate-800" />
-
-                  <div className="flex flex-wrap gap-4 justify-between text-[11px] text-slate-400">
-                    <div>Trust score: <span className="text-emerald-400 font-bold">{(reportData.overall_trust_score * 100).toFixed(1)}%</span></div>
-                    <div>Governance match: <span className="text-cyan-400 font-bold">{(reportData.governance_score * 100).toFixed(0)}%</span></div>
-                    <div>Strategy winner: <span className="text-slate-200">{reportData.strategy_summary.selected_strategy}</span></div>
-                    <div>Timeline: <span className="text-slate-200">{reportData.strategy_summary.implementation_timeline}</span></div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-rose-400 italic">Failed to generate or retrieve report data. Run agent loop to initialize cache.</div>
+              {payload.improvement_suggestions.length === 0 && (
+                <p className="text-muted-foreground text-xs italic">No suggestions generated.</p>
               )}
             </div>
           )}
 
+          {/* Report preview */}
+          {tab === "report" && (
+            <div className="text-xs">
+              {loadingReport ? (
+                <p className="text-muted-foreground italic animate-pulse">Loading report data...</p>
+              ) : reportData ? (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center border-b border-border pb-2">
+                    <span className="font-bold text-primary">Executive Workflow Report</span>
+                    <span className="font-mono text-muted-foreground">{reportData.workflow_id}</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="bg-secondary/30 rounded-lg p-3">
+                      <p className="font-semibold text-foreground mb-1">Executive Summary</p>
+                      <p className="text-muted-foreground">{reportData.executive_summary}</p>
+                    </div>
+                    <div className="bg-secondary/30 rounded-lg p-3">
+                      <p className="font-semibold text-foreground mb-1">Final Outcome</p>
+                      <p className="text-muted-foreground">{reportData.final_recommendation || "Strategy generation approved."}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-4 text-muted-foreground border-t border-border pt-3">
+                    <span>Trust: <strong className="text-status-success">{(reportData.overall_trust_score * 100).toFixed(1)}%</strong></span>
+                    <span>Governance: <strong className="text-primary">{(reportData.governance_score * 100).toFixed(0)}%</strong></span>
+                    <span>Strategy: <strong className="text-foreground">{reportData.strategy_summary?.selected_strategy}</strong></span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground italic">No report data available.</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -24,6 +24,7 @@ services:
     depends_on:
       - db
       - qdrant
+      - redis
     volumes:
       - ./backend/app:/app/app
     env_file:
@@ -32,6 +33,7 @@ services:
       # Automatically use the docker DB if running in docker
       - DECISION_OS_DATABASE_URL=postgresql+asyncpg://user:password@db:5432/decisionos
       - QDRANT_HOST=qdrant
+      - DECISION_OS_REDIS_URL=redis://redis:6379/0
     restart: unless-stopped
 
   qdrant:
@@ -42,6 +44,13 @@ services:
       - "6334:6334"
     volumes:
       - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: decisionos-redis
+    ports:
+      - "6379:6379"
     restart: unless-stopped
 
   frontend:

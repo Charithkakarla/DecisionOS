@@ -68,8 +68,8 @@ class PerformanceMetrics(Base):
     __tablename__ = "performance_metrics"
     
     id = Column(Integer, primary_key=True, index=True)
-    workflow_id = Column(String, index=True, unique=True)
-    execution_id = Column(String, index=True)
+    workflow_id = Column(String, index=True)  # not unique — multiple executions per workflow
+    execution_id = Column(String, index=True, unique=True)  # unique per execution run
     
     approval_rate = Column(Float, default=0.0)
     strategy_success_rate = Column(Float, default=0.0)

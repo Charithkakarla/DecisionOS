@@ -56,6 +56,12 @@ export const api = {
       const response = await fetch(`${API_BASE_URL}/workflows/`);
       if (!response.ok) throw new Error("Failed to list workflows");
       return response.json();
+    },
+
+    getState: async (runId: string) => {
+      const response = await fetch(`${API_BASE_URL}/workflows/${runId}/state`);
+      if (!response.ok) throw new Error("Failed to load workflow state");
+      return response.json();
     }
   },
 

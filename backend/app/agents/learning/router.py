@@ -13,12 +13,22 @@ router = APIRouter(prefix="/api/v1/learning", tags=["learning"])
 
 _service = LearningService()
 
+# Final statuses that mean a human has made a decision — learning can now run
+_FINAL_APPROVAL_STATUSES = {"approved", "rejected", "modified", "escalated"}
+
 def should_execute(state: WorkflowState) -> bool:
-    """Execute Learning Agent only after Approval is completed."""
-    return (
-        state.approval_artifact is not None
-        and state.learning_artifact is None
-    )
+    """Execute Learning Agent only after a human has made a final approval decision."""
+    if state.learning_artifact is not None:
+        return False
+    if state.approval_artifact is None:
+        return False
+    # Approval artifact exists — check it has a final (non-pending) status
+    payload = state.approval_artifact.payload
+    if isinstance(payload, dict):
+        status = payload.get("approval_status", "pending")
+    else:
+        status = getattr(payload, "approval_status", "pending")
+    return str(status).lower() in _FINAL_APPROVAL_STATUSES
 
 @router.post("/process", response_model=ProcessLearningResponse)
 async def process_learning(request: ProcessLearningRequest) -> ProcessLearningResponse:

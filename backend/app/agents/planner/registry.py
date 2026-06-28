@@ -6,6 +6,7 @@ from app.agents.decision.service import DecisionService
 from app.agents.strategy.service import StrategyService
 from app.agents.reflection.service import ReflectionService
 from app.agents.approval.service import ApprovalService
+from app.agents.learning.service import LearningService
 
 class AgentRegistry:
     def __init__(self) -> None:
@@ -25,3 +26,4 @@ agent_registry.register("decision", DecisionService())
 agent_registry.register("strategy", StrategyService())
 agent_registry.register("reflection", ReflectionService())
 agent_registry.register("approval", ApprovalService())
+agent_registry.register("learning", LearningService())

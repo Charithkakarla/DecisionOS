@@ -20,6 +20,7 @@ from app.agents.reflection.providers.base import ReflectionProvider
 from app.agents.reflection.providers.gemini import GeminiReflectionProvider
 from app.agents.reflection.providers.grok import GrokReflectionProvider
 from app.agents.reflection.providers.mock import MockReflectionProvider
+from app.core.provider_utils import is_retryable_error, log_fallback
 
 logger = logging.getLogger("decision_os.reflection.service")
 
@@ -40,6 +41,16 @@ def _build_provider() -> ReflectionProvider:
         )
     logger.warning("No LLM key found or provider is mock. Falling back to MockReflectionProvider.")
     return MockReflectionProvider()
+
+
+def _grok_provider() -> ReflectionProvider | None:
+    if settings.grok_api_key:
+        return GrokReflectionProvider(
+            api_key=settings.grok_api_key,
+            model=settings.grok_model,
+            base_url=settings.grok_base_url,
+        )
+    return None
 
 class ReflectionService(ReflectionAgent):
     def __init__(self) -> None:
@@ -73,12 +84,13 @@ class ReflectionService(ReflectionAgent):
         # 6. Explainability Audit via LLM Provider
         system_prompt = (_PROMPT_DIR / "system.txt").read_text(encoding="utf-8")
         user_template = (_PROMPT_DIR / "user.txt").read_text(encoding="utf-8")
-        
+
         explainability_results = await run_explainability_audit(
             state=state,
             provider=self._provider,
             system_prompt=system_prompt,
-            user_template=user_template
+            user_template=user_template,
+            fallback_provider=_grok_provider(),
         )
         explainability_score = explainability_results.get("explainability_score", 0.90)
 

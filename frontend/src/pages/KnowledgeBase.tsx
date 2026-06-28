@@ -115,7 +115,7 @@ export function KnowledgeBase() {
           />
           <KPICard 
             title="Search Operations" 
-            value="12,841" // Still mocked since we don't log searches yet
+            value={metrics?.search_operations ?? "—"}
             icon={<Search size={20} />} 
           />
         </div>
@@ -133,7 +133,7 @@ export function KnowledgeBase() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleSearch}
-                  placeholder="Test similarity search against the vector database... (Press Enter)" 
+                  placeholder="Search the knowledge base..." 
                   className="w-full bg-background border border-border rounded-lg py-2 pl-10 pr-4 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
               </div>
@@ -147,16 +147,16 @@ export function KnowledgeBase() {
                 </div>
               ) : searchResults ? (
                 <div className="space-y-4">
-                  {searchResults.evidence?.map((item: any, i: number) => (
+                  {searchResults.knowledge_results?.map((item: any, i: number) => (
                     <div key={i} className="p-4 rounded-lg border border-border bg-secondary/20">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-semibold text-primary">{item.source_document || "Unknown Document"}</span>
-                        <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">Score: {item.relevance_score.toFixed(3)}</span>
+                        <span className="text-sm font-semibold text-primary">{item.document_name || "Unknown Document"}</span>
+                        <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">Score: {item.similarity_score.toFixed(3)}</span>
                       </div>
                       <p className="text-sm text-foreground leading-relaxed">{item.content}</p>
                     </div>
                   ))}
-                  {(!searchResults.evidence || searchResults.evidence.length === 0) && (
+                  {(!searchResults.knowledge_results || searchResults.knowledge_results.length === 0) && (
                     <p className="text-center text-muted-foreground mt-8">No semantic matches found for this query.</p>
                   )}
                 </div>

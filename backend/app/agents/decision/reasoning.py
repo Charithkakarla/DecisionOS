@@ -13,6 +13,7 @@ from app.agents.decision.providers.base import DecisionProvider
 from app.agents.decision.providers.gemini import GeminiDecisionProvider
 from app.agents.decision.providers.grok import GrokDecisionProvider
 from app.agents.decision.providers.mock import MockDecisionProvider
+from app.core.provider_utils import is_retryable_error, log_fallback
 
 logger = logging.getLogger("decision_os.decision.reasoning")
 
@@ -33,6 +34,15 @@ class BusinessReasoningEngine:
             )
         logger.warning("No LLM key or provider is mock. Falling back to MockDecisionProvider.")
         return MockDecisionProvider()
+
+    def _grok_provider(self) -> DecisionProvider | None:
+        if settings.grok_api_key:
+            return GrokDecisionProvider(
+                api_key=settings.grok_api_key,
+                model=settings.grok_model,
+                base_url=settings.grok_base_url,
+            )
+        return None
 
     async def execute_reasoning(self, context: dict, evidence_package: Any) -> DecisionPackage:
         logger.info("Running reasoning pipeline: Context -> Evidence -> LLM Reasoning -> Rule Engine -> Scoring -> Ranking")
@@ -66,10 +76,30 @@ class BusinessReasoningEngine:
             raw_analysis = await self.provider.analyze(system_prompt=system_prompt, user_prompt=user_prompt)
             audit_trail.append(f"Retrieved assessments from {provider_used}.")
         except Exception as e:
-            logger.error(f"Provider {provider_used} failed: {e}. Initiated mock fallback.")
-            audit_trail.append(f"Provider {provider_used} failed. Initiated mock fallback.")
-            mock_provider = MockDecisionProvider()
-            raw_analysis = await mock_provider.analyze(system_prompt=system_prompt, user_prompt=user_prompt)
+            if is_retryable_error(e):
+                grok = self._grok_provider()
+                if grok:
+                    log_fallback("decision", provider_used, "GrokDecisionProvider", e)
+                    audit_trail.append(f"Gemini quota exceeded — falling back to Grok.")
+                    try:
+                        raw_analysis = await grok.analyze(system_prompt=system_prompt, user_prompt=user_prompt)
+                        provider_used = "GrokDecisionProvider"
+                        audit_trail.append("Retrieved assessments from GrokDecisionProvider.")
+                    except Exception as e2:
+                        logger.error(f"Grok also failed: {e2}. Falling back to Mock.")
+                        audit_trail.append(f"Grok failed ({e2}). Falling back to Mock.")
+                        raw_analysis = await MockDecisionProvider().analyze(system_prompt=system_prompt, user_prompt=user_prompt)
+                        provider_used = "MockDecisionProvider"
+                else:
+                    log_fallback("decision", provider_used, "MockDecisionProvider", e)
+                    audit_trail.append(f"Quota exceeded, no Grok key. Falling back to Mock.")
+                    raw_analysis = await MockDecisionProvider().analyze(system_prompt=system_prompt, user_prompt=user_prompt)
+                    provider_used = "MockDecisionProvider"
+            else:
+                logger.error(f"Provider {provider_used} failed: {e}. Initiated mock fallback.")
+                audit_trail.append(f"Provider {provider_used} failed. Initiated mock fallback.")
+                raw_analysis = await MockDecisionProvider().analyze(system_prompt=system_prompt, user_prompt=user_prompt)
+                provider_used = "MockDecisionProvider"
 
         # 3. Deterministic Business Rule Engine Checks
         rule_results = self.rule_engine.evaluate_rules(context, raw_analysis)

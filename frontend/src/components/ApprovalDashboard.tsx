@@ -25,11 +25,11 @@ const SCORE_RING_CIRCUMFERENCE = 251.2;
 function ScoreRing({ value, color, label, sublabel }: { value: number; color: string; label: string; sublabel: string }) {
   const offset = SCORE_RING_CIRCUMFERENCE - SCORE_RING_CIRCUMFERENCE * Math.min(value, 1);
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 shadow-sm flex flex-col justify-between items-center text-center">
-      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</span>
+    <div className="rounded-xl border border-border bg-card p-4 shadow-sm flex flex-col justify-between items-center text-center">
+      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</span>
       <div className="relative my-4 flex items-center justify-center">
         <svg className="w-24 h-24 transform -rotate-90">
-          <circle cx="48" cy="48" r="40" stroke="#1e293b" strokeWidth="6" fill="transparent" />
+          <circle cx="48" cy="48" r="40" stroke="hsl(220,10%,88%)" strokeWidth="6" fill="transparent" />
           <circle cx="48" cy="48" r="40" stroke={color} strokeWidth="6" fill="transparent"
             strokeDasharray={SCORE_RING_CIRCUMFERENCE}
             strokeDashoffset={offset}
@@ -37,9 +37,9 @@ function ScoreRing({ value, color, label, sublabel }: { value: number; color: st
             className="transition-all duration-700 ease-out"
           />
         </svg>
-        <span className="absolute text-xl font-bold text-slate-200">{(value * 100).toFixed(0)}%</span>
+        <span className="absolute text-xl font-bold text-foreground">{(value * 100).toFixed(0)}%</span>
       </div>
-      <span className="text-[10px] text-slate-400 mt-1 italic">{sublabel}</span>
+      <span className="text-[10px] text-muted-foreground mt-1 italic">{sublabel}</span>
     </div>
   );
 }
@@ -392,15 +392,15 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
     <div className="space-y-6">
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <section className="bg-slate-950 rounded-xl p-5 border border-slate-800 shadow-lg">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-3 mb-4 gap-2">
+      <section className="bg-card rounded-xl p-5 border border-border shadow-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-border pb-3 mb-4 gap-2">
           <div>
-            <h3 className="text-lg font-bold text-slate-200">Enterprise AI Governance Portal</h3>
-            <p className="text-xs text-slate-400">Review, approve, modify, escalate, or reject the AI-generated strategy</p>
+            <h3 className="text-lg font-bold text-foreground">Enterprise AI Governance Portal</h3>
+            <p className="text-xs text-muted-foreground">Review, approve, modify, escalate, or reject the AI-generated strategy</p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-500">Workflow</span>
-            <span className="text-xs font-mono text-cyan-400">{workflowId}</span>
+            <span className="text-xs text-muted-foreground">Workflow</span>
+            <span className="text-xs font-mono text-primary">{workflowId}</span>
             <StatusBadge status={finalStatus} />
           </div>
         </div>
@@ -416,24 +416,24 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
 
       {/* ── Escalation Signals Banner ──────────────────────────────────── */}
       {escalationSignals.length > 0 && (
-        <section className="bg-rose-950/20 rounded-xl p-4 border border-rose-500/20 shadow-lg">
+        <section className="bg-status-error-bg rounded-xl p-4 border border-status-error/20 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider bg-rose-500 text-white px-2 py-0.5 rounded">
+            <span className="text-xs font-bold uppercase tracking-wider bg-status-error text-white px-2 py-0.5 rounded">
               Escalation Signals Detected
             </span>
-            <span className="text-xs text-slate-400">
-              {escalationSignals.length} risk signal{escalationSignals.length > 1 ? "s" : ""} flagged by governance engine
+            <span className="text-xs text-muted-foreground">
+              {escalationSignals.length} risk signal{escalationSignals.length > 1 ? "s" : ""} flagged
             </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {escalationSignals.map((sig, i) => (
-              <div key={i} className="flex items-center gap-2 bg-slate-900/60 border border-rose-500/10 rounded-lg p-2.5 text-xs">
+              <div key={i} className="flex items-center gap-2 bg-card border border-border rounded-lg p-2.5 text-xs">
                 <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
-                  sig.severity === "high" ? "bg-rose-500/20 text-rose-400" : "bg-amber-500/20 text-amber-400"
+                  sig.severity === "high" ? "bg-status-error-bg text-status-error" : "bg-status-warning-bg text-status-warning"
                 }`}>
                   {sig.severity}
                 </span>
-                <span className="text-slate-300">{sig.description}</span>
+                <span className="text-foreground">{sig.description}</span>
               </div>
             ))}
           </div>
@@ -441,165 +441,154 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
       )}
 
       {/* ── Executive Summary ──────────────────────────────────────────── */}
-      <section className="bg-slate-950 rounded-xl p-5 border border-slate-800 shadow-lg">
-        <h4 className="text-sm font-bold text-slate-300 mb-3 border-b border-slate-800 pb-2">Executive Workflow Summary</h4>
+      <section className="bg-card rounded-xl p-5 border border-border shadow-sm">
+        <h4 className="text-sm font-bold text-foreground mb-3 border-b border-border pb-2">Executive Workflow Summary</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <div className="bg-slate-900/40 rounded-lg p-3 border border-slate-900 space-y-2">
-            <p className="font-semibold text-slate-300">Selected Strategy</p>
-            <p className="text-slate-400">{(strategyPayload as Record<string, any>)?.selected_strategy ?? "N/A"}</p>
+          <div className="bg-secondary/40 rounded-lg p-3 border border-border space-y-2">
+            <p className="font-semibold text-foreground">Selected Strategy</p>
+            <p className="text-muted-foreground">{(strategyPayload as Record<string, any>)?.selected_strategy ?? "N/A"}</p>
             <div className="flex gap-4 mt-2">
-              <div>
-                <span className="text-slate-500">Est. ROI:</span>{" "}
-                <span className="text-emerald-400 font-bold">{((strategyPayload as Record<string, any>)?.estimated_roi ?? 0).toFixed(1)}x</span>
-              </div>
-              <div>
-                <span className="text-slate-500">Timeline:</span>{" "}
-                <span className="text-slate-200">{(strategyPayload as Record<string, any>)?.implementation_timeline ?? "N/A"}</span>
-              </div>
-              <div>
-                <span className="text-slate-500">Complexity:</span>{" "}
-                <span className="text-slate-200">{(strategyPayload as Record<string, any>)?.implementation_complexity ?? "N/A"}</span>
-              </div>
+              <div><span className="text-muted-foreground">Est. ROI:</span>{" "}<span className="text-status-success font-bold">{((strategyPayload as Record<string, any>)?.estimated_roi ?? 0).toFixed(1)}x</span></div>
+              <div><span className="text-muted-foreground">Timeline:</span>{" "}<span className="text-foreground">{(strategyPayload as Record<string, any>)?.implementation_timeline ?? "N/A"}</span></div>
+              <div><span className="text-muted-foreground">Complexity:</span>{" "}<span className="text-foreground">{(strategyPayload as Record<string, any>)?.implementation_complexity ?? "N/A"}</span></div>
             </div>
           </div>
-          <div className="bg-slate-900/40 rounded-lg p-3 border border-slate-900 space-y-2">
-            <p className="font-semibold text-slate-300">Decision Reasoning</p>
-            <p className="text-slate-400">{(decisionPayload as Record<string, any>)?.decision_reasoning ?? "N/A"}</p>
-            <p className="font-semibold text-slate-300 mt-2">Reflection Verdict</p>
-            <p className="text-slate-400">{reflectionPayload?.audit_summary ?? "N/A"}</p>
+          <div className="bg-secondary/40 rounded-lg p-3 border border-border space-y-2">
+            <p className="font-semibold text-foreground">Decision Reasoning</p>
+            <p className="text-muted-foreground">{(decisionPayload as Record<string, any>)?.decision_reasoning ?? "N/A"}</p>
+            <p className="font-semibold text-foreground mt-2">Reflection Verdict</p>
+            <p className="text-muted-foreground">{reflectionPayload?.audit_summary ?? "N/A"}</p>
           </div>
         </div>
       </section>
 
       {/* ── Interactive Review Actions ─────────────────────────────────── */}
       {!isDecisionMade && (
-        <section className="bg-slate-950 rounded-xl p-5 border border-slate-800 shadow-lg">
-          <h4 className="text-sm font-bold text-slate-300 mb-4 border-b border-slate-800 pb-2">
+        <section className="bg-card rounded-xl p-5 border border-border shadow-sm">
+          <h4 className="text-sm font-bold text-foreground mb-4 border-b border-border pb-2">
             Reviewer Identity & Action
           </h4>
 
           {/* Reviewer fields */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
-              <label className="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Reviewer Name / ID</label>
+              <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Reviewer Name / ID</label>
               <input type="text" value={reviewer} onChange={e => setReviewer(e.target.value)}
-                placeholder="e.g., John Smith, VP Operations"
-                className="w-full text-xs bg-slate-900 border border-slate-800 p-2.5 rounded-lg text-slate-200 outline-none ring-emerald-500/30 focus:ring transition" />
+                placeholder="John Smith, VP Operations"
+                className="w-full text-xs bg-background border border-border p-2.5 rounded-lg text-foreground outline-none focus:border-primary transition" />
             </div>
             <div>
-              <label className="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Business Owner</label>
+              <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Business Owner</label>
               <input type="text" value={businessOwner} onChange={e => setBusinessOwner(e.target.value)}
-                placeholder="e.g., IT Department, Finance Team"
-                className="w-full text-xs bg-slate-900 border border-slate-800 p-2.5 rounded-lg text-slate-200 outline-none ring-emerald-500/30 focus:ring transition" />
+                placeholder="IT Department, Finance Team"
+                className="w-full text-xs bg-background border border-border p-2.5 rounded-lg text-foreground outline-none focus:border-primary transition" />
             </div>
             <div>
-              <label className="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Department</label>
+              <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Department</label>
               <select value={department} onChange={e => setDepartment(e.target.value)}
-                className="w-full text-xs bg-slate-900 border border-slate-800 p-2.5 rounded-lg text-slate-200 outline-none">
+                className="w-full text-xs bg-background border border-border p-2.5 rounded-lg text-foreground outline-none focus:border-primary">
                 {DEPARTMENT_OPTIONS.map(d => <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
               </select>
             </div>
           </div>
 
-          {/* Action selection tabs */}
-          <div className="flex border-b border-slate-800 text-xs mb-4">
+          {/* Action tabs */}
+          <div className="flex border-b border-border text-xs mb-4">
             {([
-              { key: "approve" as const, label: "Approve", color: "emerald" },
-              { key: "modify" as const, label: "Modify", color: "yellow" },
-              { key: "escalate" as const, label: "Escalate", color: "purple" },
-              { key: "reject" as const, label: "Reject", color: "rose" },
+              { key: "approve" as const,  label: "Approve",  color: "emerald" },
+              { key: "modify" as const,   label: "Modify",   color: "yellow"  },
+              { key: "escalate" as const, label: "Escalate", color: "purple"  },
+              { key: "reject" as const,   label: "Reject",   color: "rose"    },
             ]).map(tab => (
               <button key={tab.key} onClick={() => setActiveAction(tab.key)}
                 className={`px-4 py-2.5 border-b-2 font-bold transition ${
-                  activeAction === tab.key
-                    ? `border-${tab.color}-400 text-${tab.color}-400`
-                    : "border-transparent text-slate-400 hover:text-slate-200"
+                  activeAction === tab.key ? `border-${tab.color}-500 text-${tab.color}-600` : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
-                style={activeAction === tab.key ? { borderBottomColor: tab.color === "emerald" ? "#34d399" : tab.color === "yellow" ? "#fbbf24" : tab.color === "purple" ? "#a78bfa" : "#fb7185", color: tab.color === "emerald" ? "#34d399" : tab.color === "yellow" ? "#fbbf24" : tab.color === "purple" ? "#a78bfa" : "#fb7185" } : {}}>
+                style={activeAction === tab.key ? { borderBottomColor: tab.color === "emerald" ? "#10b981" : tab.color === "yellow" ? "#f59e0b" : tab.color === "purple" ? "#8b5cf6" : "#ef4444", color: tab.color === "emerald" ? "#059669" : tab.color === "yellow" ? "#d97706" : tab.color === "purple" ? "#7c3aed" : "#dc2626" } : {}}>
                 {tab.label}
               </button>
             ))}
           </div>
 
-          {/* ── Approve panel ───────────────────────────────────────── */}
+          {/* Approve panel */}
           {activeAction === "approve" && (
-            <div className="space-y-4 bg-emerald-950/10 border border-emerald-500/10 rounded-lg p-4">
+            <div className="space-y-4 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
               <div>
-                <label className="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Approval Comments (min 10 characters)</label>
+                <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Approval Comments (min 10 characters)</label>
                 <textarea value={approvalComments} onChange={e => setApprovalComments(e.target.value)}
                   placeholder="Provide detailed justification for approving this strategy..."
-                  className="w-full h-20 text-xs bg-slate-900 border border-slate-800 p-2.5 rounded-lg text-slate-200 outline-none resize-none" />
+                  className="w-full h-20 text-xs bg-white border border-emerald-200 p-2.5 rounded-lg text-foreground outline-none resize-none focus:border-emerald-400" />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Approval Reason</label>
+                  <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Approval Reason</label>
                   <input type="text" value={approvalReason} onChange={e => setApprovalReason(e.target.value)}
-                    placeholder="e.g., All validation criteria met."
-                    className="w-full text-xs bg-slate-900 border border-slate-800 p-2.5 rounded-lg text-slate-200 outline-none" />
+                    placeholder="All validation criteria met."
+                    className="w-full text-xs bg-white border border-emerald-200 p-2.5 rounded-lg text-foreground outline-none focus:border-emerald-400" />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">
+                  <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
                     Approval Confidence: {(approvalConfidence * 100).toFixed(0)}%
                   </label>
                   <input type="range" min="0" max="1" step="0.05" value={approvalConfidence}
                     onChange={e => setApprovalConfidence(parseFloat(e.target.value))}
-                    className="w-full h-1.5 bg-slate-800 rounded-full appearance-none cursor-pointer accent-emerald-500" />
+                    className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-emerald-600" />
                 </div>
               </div>
               <button onClick={handleSubmitApproval} disabled={submitting || !reviewer.trim() || approvalComments.length < 10 || !businessOwner.trim()}
-                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed">
-                {submitting ? "Submitting Approval..." : "Submit Approval"}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed">
+                {submitting ? "Submitting..." : "Submit Approval"}
               </button>
             </div>
           )}
 
-          {/* ── Modify panel ────────────────────────────────────────── */}
+          {/* Modify panel */}
           {activeAction === "modify" && (
-            <div className="space-y-4 bg-yellow-950/10 border border-yellow-500/10 rounded-lg p-4">
+            <div className="space-y-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
               <div>
-                <label className="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Modification Comments (min 10 characters)</label>
+                <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Modification Comments (min 10 characters)</label>
                 <textarea value={approvalComments} onChange={e => setApprovalComments(e.target.value)}
                   placeholder="Describe why modifications are needed..."
-                  className="w-full h-20 text-xs bg-slate-900 border border-slate-800 p-2.5 rounded-lg text-slate-200 outline-none resize-none" />
+                  className="w-full h-20 text-xs bg-white border border-amber-200 p-2.5 rounded-lg text-foreground outline-none resize-none focus:border-amber-400" />
               </div>
 
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Modified Sections (Before → After)</span>
-                  <button onClick={addModifiedSection} className="text-[10px] text-yellow-400 hover:text-yellow-300 font-semibold">+ Add Section</button>
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Modified Sections (Before → After)</span>
+                  <button onClick={addModifiedSection} className="text-[10px] text-amber-600 hover:text-amber-700 font-semibold">+ Add Section</button>
                 </div>
                 {modifiedSections.map((mod, idx) => (
-                  <div key={idx} className="bg-slate-900/60 border border-slate-800 rounded-lg p-3 space-y-2">
+                  <div key={idx} className="bg-white border border-amber-200 rounded-lg p-3 space-y-2">
                     <div className="flex justify-between items-center">
                       <input type="text" value={mod.section} onChange={e => updateModifiedSection(idx, "section", e.target.value)}
                         placeholder="Section name (e.g., strategy.timeline)"
-                        className="flex-1 text-xs bg-slate-950 border border-slate-800 p-2 rounded text-slate-200 outline-none mr-2" />
+                        className="flex-1 text-xs bg-background border border-border p-2 rounded text-foreground outline-none mr-2 focus:border-primary" />
                       {modifiedSections.length > 1 && (
-                        <button onClick={() => removeModifiedSection(idx)} className="text-[10px] text-rose-400 hover:text-rose-300">Remove</button>
+                        <button onClick={() => removeModifiedSection(idx)} className="text-[10px] text-status-error hover:text-red-700">Remove</button>
                       )}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <input type="text" value={mod.before} onChange={e => updateModifiedSection(idx, "before", e.target.value)}
                         placeholder="Original value"
-                        className="text-xs bg-rose-950/20 border border-rose-500/10 p-2 rounded text-slate-300 outline-none" />
+                        className="text-xs bg-status-error-bg border border-status-error/20 p-2 rounded text-foreground outline-none focus:border-status-error" />
                       <input type="text" value={mod.after} onChange={e => updateModifiedSection(idx, "after", e.target.value)}
                         placeholder="New value"
-                        className="text-xs bg-emerald-950/20 border border-emerald-500/10 p-2 rounded text-slate-300 outline-none" />
+                        className="text-xs bg-status-success-bg border border-status-success/20 p-2 rounded text-foreground outline-none focus:border-status-success" />
                     </div>
                     <input type="text" value={mod.change_reason} onChange={e => updateModifiedSection(idx, "change_reason", e.target.value)}
                       placeholder="Reason for change"
-                      className="w-full text-xs bg-slate-950 border border-slate-800 p-2 rounded text-slate-300 outline-none" />
+                      className="w-full text-xs bg-background border border-border p-2 rounded text-foreground outline-none focus:border-primary" />
                   </div>
                 ))}
               </div>
 
               <div>
-                <label className="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">
+                <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
                   Confidence in Modified Strategy: {(approvalConfidence * 100).toFixed(0)}%
                 </label>
                 <input type="range" min="0" max="1" step="0.05" value={approvalConfidence}
                   onChange={e => setApprovalConfidence(parseFloat(e.target.value))}
-                  className="w-full h-1.5 bg-slate-800 rounded-full appearance-none cursor-pointer accent-yellow-500" />
+                  className="w-full h-1.5 bg-secondary rounded-full appearance-none cursor-pointer accent-primary" />
               </div>
 
               <button onClick={handleSubmitModification}
@@ -612,27 +601,27 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
 
           {/* ── Escalate panel ──────────────────────────────────────── */}
           {activeAction === "escalate" && (
-            <div className="space-y-4 bg-purple-950/10 border border-purple-500/10 rounded-lg p-4">
+            <div className="space-y-4 bg-purple-50 border border-purple-200 rounded-lg p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Escalate To</label>
+                  <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Escalate To</label>
                   <select value={escalatedTo} onChange={e => setEscalatedTo(e.target.value)}
-                    className="w-full text-xs bg-slate-900 border border-slate-800 p-2.5 rounded-lg text-slate-200 outline-none">
+                    className="w-full text-xs bg-background border border-border p-2.5 rounded-lg text-foreground outline-none focus:border-primary">
                     {ESCALATION_TARGETS.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Escalation Reason (min 10 characters)</label>
+                  <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Escalation Reason (min 10 characters)</label>
                   <input type="text" value={escalationReason} onChange={e => setEscalationReason(e.target.value)}
                     placeholder="Why does this require executive review?"
-                    className="w-full text-xs bg-slate-900 border border-slate-800 p-2.5 rounded-lg text-slate-200 outline-none" />
+                    className="w-full text-xs bg-background border border-border p-2.5 rounded-lg text-foreground outline-none focus:border-primary" />
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Additional Comments</label>
+                <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Additional Comments</label>
                 <textarea value={approvalComments} onChange={e => setApprovalComments(e.target.value)}
                   placeholder="Provide context for the executive reviewer..."
-                  className="w-full h-16 text-xs bg-slate-900 border border-slate-800 p-2.5 rounded-lg text-slate-200 outline-none resize-none" />
+                  className="w-full h-16 text-xs bg-background border border-border p-2.5 rounded-lg text-foreground outline-none resize-none focus:border-primary" />
               </div>
               <button onClick={handleSubmitEscalation}
                 disabled={submitting || !reviewer.trim() || escalationReason.length < 10 || !escalatedTo.trim()}
@@ -644,18 +633,18 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
 
           {/* ── Reject panel ────────────────────────────────────────── */}
           {activeAction === "reject" && (
-            <div className="space-y-4 bg-rose-950/10 border border-rose-500/10 rounded-lg p-4">
+            <div className="space-y-4 bg-rose-50 border border-rose-200 rounded-lg p-4">
               <div>
-                <label className="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Rejection Comments (min 10 characters)</label>
+                <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Rejection Comments (min 10 characters)</label>
                 <textarea value={approvalComments} onChange={e => setApprovalComments(e.target.value)}
                   placeholder="Explain why this strategy is being rejected..."
-                  className="w-full h-20 text-xs bg-slate-900 border border-slate-800 p-2.5 rounded-lg text-slate-200 outline-none resize-none" />
+                  className="w-full h-20 text-xs bg-background border border-border p-2.5 rounded-lg text-foreground outline-none resize-none focus:border-primary" />
               </div>
               <div>
-                <label className="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Rejection Reason</label>
+                <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Rejection Reason</label>
                 <input type="text" value={approvalReason} onChange={e => setApprovalReason(e.target.value)}
-                  placeholder="e.g., Insufficient risk mitigation plan."
-                  className="w-full text-xs bg-slate-900 border border-slate-800 p-2.5 rounded-lg text-slate-200 outline-none" />
+                  placeholder="Insufficient risk mitigation plan."
+                  className="w-full text-xs bg-background border border-border p-2.5 rounded-lg text-foreground outline-none focus:border-primary" />
               </div>
               <button onClick={handleSubmitRejection}
                 disabled={submitting || !reviewer.trim() || approvalComments.length < 10 || !businessOwner.trim()}
@@ -667,46 +656,46 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
 
           {/* ── Error display ───────────────────────────────────────── */}
           {submitError && (
-            <div className="bg-rose-950/20 border border-rose-500/20 rounded-lg p-3 mt-3">
-              <p className="text-xs text-rose-400 font-semibold">Submission Error</p>
+            <div className="bg-status-error-bg border border-status-error/20 rounded-lg p-3 mt-3">
+              <p className="text-xs text-status-error font-semibold">Submission Error</p>
               <p className="text-xs text-rose-300 mt-1">{submitError}</p>
             </div>
           )}
 
           {/* ── Feedback Items Section ──────────────────────────────── */}
-          <div className="mt-4 border-t border-slate-800 pt-4">
+          <div className="mt-4 border-t border-border pt-4">
             <div className="flex justify-between items-center mb-3">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
                 Structured Feedback Items ({feedbackItems.length})
               </span>
               <button onClick={() => setShowFeedbackForm(!showFeedbackForm)}
-                className="text-[10px] text-cyan-400 hover:text-cyan-300 font-semibold">
+                className="text-[10px] text-primary hover:text-primary/80 font-semibold">
                 {showFeedbackForm ? "Cancel" : "+ Add Feedback"}
               </button>
             </div>
 
             {feedbackItems.map((item, idx) => (
-              <div key={idx} className="flex items-start gap-2 bg-slate-900/40 border border-slate-800 rounded-lg p-2.5 mb-2 text-xs">
+              <div key={idx} className="flex items-start gap-2 bg-secondary/40 border border-border rounded-lg p-2.5 mb-2 text-xs">
                 <span className="px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[9px] font-bold uppercase">{item.feedback_type}</span>
                 <div className="flex-1">
-                  <span className="text-slate-300 font-semibold">{item.section}</span>
+                  <span className="text-foreground font-semibold">{item.section}</span>
                   {item.original_value && <span className="text-rose-400 ml-2 line-through">{item.original_value}</span>}
                   {item.corrected_value && <span className="text-emerald-400 ml-2">{item.corrected_value}</span>}
-                  {item.comment && <p className="text-slate-400 mt-0.5 italic">{item.comment}</p>}
+                  {item.comment && <p className="text-muted-foreground mt-0.5 italic">{item.comment}</p>}
                 </div>
                 <button onClick={() => removeFeedbackItem(idx)} className="text-[10px] text-rose-400 hover:text-rose-300">✕</button>
               </div>
             ))}
 
             {showFeedbackForm && (
-              <div className="bg-slate-900/40 border border-slate-800 rounded-lg p-3 space-y-2">
+              <div className="bg-secondary/40 border border-border rounded-lg p-3 space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <input type="text" value={newFeedback.section} onChange={e => setNewFeedback(prev => ({ ...prev, section: e.target.value }))}
                     placeholder="Section (e.g., strategy.timeline)"
-                    className="text-xs bg-slate-950 border border-slate-800 p-2 rounded text-slate-200 outline-none" />
+                    className="text-xs bg-background border border-border p-2 rounded text-foreground outline-none focus:border-primary" />
                   <select value={newFeedback.feedback_type}
                     onChange={e => setNewFeedback(prev => ({ ...prev, feedback_type: e.target.value as FeedbackItem["feedback_type"] }))}
-                    className="text-xs bg-slate-950 border border-slate-800 p-2 rounded text-slate-200 outline-none">
+                    className="text-xs bg-background border border-border p-2 rounded text-foreground outline-none focus:border-primary">
                     <option value="note">Note</option>
                     <option value="correction">Correction</option>
                     <option value="addition">Addition</option>
@@ -716,17 +705,17 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
                 <div className="grid grid-cols-2 gap-2">
                   <input type="text" value={newFeedback.original_value} onChange={e => setNewFeedback(prev => ({ ...prev, original_value: e.target.value }))}
                     placeholder="Original value (optional)"
-                    className="text-xs bg-slate-950 border border-slate-800 p-2 rounded text-slate-200 outline-none" />
+                    className="text-xs bg-background border border-border p-2 rounded text-foreground outline-none focus:border-primary" />
                   <input type="text" value={newFeedback.corrected_value} onChange={e => setNewFeedback(prev => ({ ...prev, corrected_value: e.target.value }))}
                     placeholder="Corrected value (optional)"
-                    className="text-xs bg-slate-950 border border-slate-800 p-2 rounded text-slate-200 outline-none" />
+                    className="text-xs bg-background border border-border p-2 rounded text-foreground outline-none focus:border-primary" />
                 </div>
                 <input type="text" value={newFeedback.comment} onChange={e => setNewFeedback(prev => ({ ...prev, comment: e.target.value }))}
                   placeholder="Comment or note"
-                  className="w-full text-xs bg-slate-950 border border-slate-800 p-2 rounded text-slate-200 outline-none" />
+                  className="w-full text-xs bg-background border border-border p-2 rounded text-foreground outline-none focus:border-primary" />
                 <button onClick={addFeedbackItem}
                   disabled={!newFeedback.section.trim() || (!newFeedback.comment.trim() && !newFeedback.corrected_value.trim())}
-                  className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 disabled:opacity-40 disabled:cursor-not-allowed">
+                  className="text-xs font-semibold text-primary hover:text-primary/80 disabled:opacity-40 disabled:cursor-not-allowed">
                   Add Feedback Item
                 </button>
               </div>
@@ -737,35 +726,35 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
 
       {/* ── Decision Result Card ───────────────────────────────────────── */}
       {isDecisionMade && (
-        <section className="bg-slate-950 rounded-xl p-5 border border-slate-800 shadow-lg">
+        <section className="bg-card rounded-xl p-5 border border-border shadow-sm">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h4 className="text-sm font-bold text-slate-200">Approval Decision Recorded</h4>
-              <p className="text-xs text-slate-400 mt-1">
+              <h4 className="text-sm font-bold text-foreground">Approval Decision Recorded</h4>
+              <p className="text-xs text-muted-foreground mt-1">
                 {submitResult?.message ?? `Workflow has been ${finalStatus} by ${approvalPayload?.reviewer ?? "reviewer"}.`}
               </p>
             </div>
             <StatusBadge status={finalStatus} />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-            <div className="bg-slate-900/40 rounded-lg p-3 border border-slate-900">
-              <span className="text-slate-500 block mb-1">Artifact ID</span>
-              <span className="text-cyan-400 font-mono text-[10px] break-all">{submitResult?.artifact_id ?? approvalPayload?.workflow_report_reference ?? "N/A"}</span>
+            <div className="bg-secondary/40 rounded-lg p-3 border border-border">
+              <span className="text-muted-foreground block mb-1">Artifact ID</span>
+              <span className="text-primary font-mono text-[10px] break-all">{submitResult?.artifact_id ?? approvalPayload?.workflow_report_reference ?? "N/A"}</span>
             </div>
-            <div className="bg-slate-900/40 rounded-lg p-3 border border-slate-900">
-              <span className="text-slate-500 block mb-1">Learning Queue</span>
-              <span className="text-purple-400 font-mono text-[10px] break-all">
+            <div className="bg-secondary/40 rounded-lg p-3 border border-border">
+              <span className="text-muted-foreground block mb-1">Learning Queue</span>
+              <span className="text-violet-600 font-mono text-[10px] break-all">
                 {submitResult?.learning_queue_id ? `✓ Queued: ${submitResult.learning_queue_id.slice(0, 8)}...` : "Not queued"}
               </span>
             </div>
-            <div className="bg-slate-900/40 rounded-lg p-3 border border-slate-900">
-              <span className="text-slate-500 block mb-1">Governance Compliance</span>
+            <div className="bg-secondary/40 rounded-lg p-3 border border-border">
+              <span className="text-muted-foreground block mb-1">Governance Compliance</span>
               {submitResult?.governance_compliant !== undefined ? (
-                <span className={submitResult.governance_compliant ? "text-emerald-400" : "text-rose-400"}>
+                <span className={submitResult.governance_compliant ? "text-status-success" : "text-status-error"}>
                   {submitResult.governance_compliant ? "✓ Compliant" : "✕ Non-Compliant"}
                 </span>
               ) : (
-                <span className="text-slate-400">Pending verification</span>
+                <span className="text-muted-foreground">Pending verification</span>
               )}
             </div>
           </div>
@@ -789,25 +778,23 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
       )}
 
       {/* ── Audit Timeline & History ───────────────────────────────────── */}
-      <section className="bg-slate-950 rounded-xl border border-slate-800 shadow-lg overflow-hidden">
-        <div className="flex border-b border-slate-800 text-xs">
+      <section className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+        <div className="flex border-b border-border text-xs">
           <button onClick={() => setExpandedPanel("timeline")}
-            className={`px-4 py-3 border-b-2 font-bold transition ${expandedPanel === "timeline" ? "border-cyan-400 text-cyan-400" : "border-transparent text-slate-400 hover:text-slate-200"}`}>
+            className={`px-4 py-3 border-b-2 font-bold transition ${expandedPanel === "timeline" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
             Pipeline Timeline
           </button>
           <button onClick={() => setExpandedPanel("history")}
-            className={`px-4 py-3 border-b-2 font-bold transition ${expandedPanel === "history" ? "border-cyan-400 text-cyan-400" : "border-transparent text-slate-400 hover:text-slate-200"}`}>
+            className={`px-4 py-3 border-b-2 font-bold transition ${expandedPanel === "history" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
             Audit History ({auditHistory.length})
           </button>
         </div>
 
         <div className="p-4">
-          {/* ── Visual Pipeline Timeline ──────────────────────────────── */}
           {expandedPanel === "timeline" && (
             <div className="relative">
               {timeline.length === 0 ? (
                 <div className="space-y-4">
-                  {/* Build timeline from workflow events when API timeline isn't available */}
                   {PIPELINE_AGENTS.map((agent, idx) => {
                     const artifactKey = `${agent.key}_artifact` as keyof WorkflowState;
                     const artifact = workflowState[artifactKey];
@@ -817,29 +804,29 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
                       <div key={agent.key} className="flex items-start gap-4">
                         <div className="flex flex-col items-center">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition ${
-                            isComplete ? "border-emerald-500 bg-emerald-500/10 text-emerald-400" : "border-slate-700 bg-slate-900 text-slate-500"
+                            isComplete ? "border-status-success bg-status-success-bg text-status-success" : "border-border bg-secondary text-muted-foreground"
                           }`}>
                             {idx + 1}
                           </div>
                           {idx < PIPELINE_AGENTS.length - 1 && (
-                            <div className={`w-0.5 h-8 ${isComplete ? "bg-emerald-500/30" : "bg-slate-800"}`} />
+                            <div className={`w-0.5 h-8 ${isComplete ? "bg-status-success/30" : "bg-border"}`} />
                           )}
                         </div>
                         <div className="flex-1 pb-2">
                           <div className="flex justify-between items-center">
-                            <span className="text-xs font-semibold text-slate-200">{agent.label}</span>
+                            <span className="text-xs font-semibold text-foreground">{agent.label}</span>
                             <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
-                              isComplete ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-slate-800 text-slate-500"
+                              isComplete ? "bg-status-success-bg text-status-success border border-status-success/20" : "bg-secondary text-muted-foreground"
                             }`}>
                               {isComplete ? "Completed" : "Pending"}
                             </span>
                           </div>
                           {isComplete && meta && (
-                            <div className="flex gap-4 mt-1 text-[10px] text-slate-400">
-                              <span>Latency: <span className="text-slate-300">{meta.latency_ms}ms</span></span>
-                              <span>Provider: <span className="text-slate-300 font-mono">{meta.provider}</span></span>
+                            <div className="flex gap-4 mt-1 text-[10px] text-muted-foreground">
+                              <span>Latency: <span className="text-foreground">{meta.latency_ms}ms</span></span>
+                              <span>Provider: <span className="text-foreground font-mono">{meta.provider}</span></span>
                               {(artifact as Record<string, any>)?.confidence !== undefined && (
-                                <span>Confidence: <span className="text-slate-300">{((artifact as Record<string, any>).confidence * 100).toFixed(0)}%</span></span>
+                                <span>Confidence: <span className="text-foreground">{((artifact as Record<string, any>).confidence * 100).toFixed(0)}%</span></span>
                               )}
                             </div>
                           )}
@@ -854,33 +841,33 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
                     <div key={idx} className="flex items-start gap-4">
                       <div className="flex flex-col items-center">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition ${
-                          step.status === "completed" ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
-                            : step.status === "pending" ? "border-blue-500/40 bg-blue-500/10 text-blue-400 animate-pulse"
-                            : "border-slate-700 bg-slate-900 text-slate-500"
+                          step.status === "completed" ? "border-status-success bg-status-success-bg text-status-success"
+                            : step.status === "pending" ? "border-blue-400 bg-blue-50 text-blue-600 animate-pulse"
+                            : "border-border bg-secondary text-muted-foreground"
                         }`}>
                           {step.step + 1}
                         </div>
                         {idx < timeline.length - 1 && (
-                          <div className={`w-0.5 h-8 ${step.status === "completed" ? "bg-emerald-500/30" : "bg-slate-800"}`} />
+                          <div className={`w-0.5 h-8 ${step.status === "completed" ? "bg-status-success/30" : "bg-border"}`} />
                         )}
                       </div>
                       <div className="flex-1 pb-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-xs font-semibold text-slate-200">{step.label}</span>
+                          <span className="text-xs font-semibold text-foreground">{step.label}</span>
                           <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
-                            step.status === "completed" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                              : step.status === "pending" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse"
-                              : "bg-slate-800 text-slate-500"
+                            step.status === "completed" ? "bg-status-success-bg text-status-success border border-status-success/20"
+                              : step.status === "pending" ? "bg-blue-50 text-blue-600 border border-blue-200 animate-pulse"
+                              : "bg-secondary text-muted-foreground"
                           }`}>
                             {step.status}
                           </span>
                         </div>
-                        <div className="flex gap-4 mt-1 text-[10px] text-slate-400">
-                          {step.timestamp && <span>Time: <span className="text-slate-300">{new Date(step.timestamp).toLocaleTimeString()}</span></span>}
-                          {step.duration_ms > 0 && <span>Duration: <span className="text-slate-300">{step.duration_ms}ms</span></span>}
-                          {step.provider && <span>Provider: <span className="text-slate-300 font-mono">{step.provider}</span></span>}
-                          {step.confidence > 0 && <span>Confidence: <span className="text-slate-300">{(step.confidence * 100).toFixed(0)}%</span></span>}
-                          {step.reviewer && <span>Reviewer: <span className="text-slate-300">{step.reviewer}</span></span>}
+                        <div className="flex gap-4 mt-1 text-[10px] text-muted-foreground">
+                          {step.timestamp && <span>Time: <span className="text-foreground">{new Date(step.timestamp).toLocaleTimeString()}</span></span>}
+                          {step.duration_ms > 0 && <span>Duration: <span className="text-foreground">{step.duration_ms}ms</span></span>}
+                          {step.provider && <span>Provider: <span className="text-foreground font-mono">{step.provider}</span></span>}
+                          {step.confidence > 0 && <span>Confidence: <span className="text-foreground">{(step.confidence * 100).toFixed(0)}%</span></span>}
+                          {step.reviewer && <span>Reviewer: <span className="text-foreground">{step.reviewer}</span></span>}
                         </div>
                       </div>
                     </div>
@@ -890,16 +877,15 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
             </div>
           )}
 
-          {/* ── Audit History Table ───────────────────────────────────── */}
           {expandedPanel === "history" && (
             <div>
               {auditHistory.length === 0 ? (
-                <p className="text-xs text-slate-500 italic">No audit history events recorded yet. Submit an approval action to generate audit records.</p>
+                <p className="text-xs text-muted-foreground italic">No audit history recorded yet. Submit an approval action to generate audit records.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="text-left text-slate-500 border-b border-slate-800">
+                      <tr className="text-left text-muted-foreground border-b border-border">
                         <th className="pb-2 pr-4">Timestamp</th>
                         <th className="pb-2 pr-4">Event Type</th>
                         <th className="pb-2 pr-4">Actor</th>
@@ -909,24 +895,24 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
                     </thead>
                     <tbody>
                       {auditHistory.map((entry) => (
-                        <tr key={entry.event_id} className="border-b border-slate-900 text-slate-300">
-                          <td className="py-2 pr-4 text-slate-400 font-mono text-[10px]">
+                        <tr key={entry.event_id} className="border-b border-border text-foreground">
+                          <td className="py-2 pr-4 text-muted-foreground font-mono text-[10px]">
                             {entry.timestamp ? new Date(entry.timestamp).toLocaleString() : "N/A"}
                           </td>
                           <td className="py-2 pr-4">
                             <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${
-                              entry.event_type.includes("Granted") || entry.event_type.includes("Completed") ? "bg-emerald-500/10 text-emerald-400" :
-                              entry.event_type.includes("Rejected") || entry.event_type.includes("Failed") ? "bg-rose-500/10 text-rose-400" :
-                              entry.event_type.includes("Escalated") ? "bg-purple-500/10 text-purple-400" :
-                              entry.event_type.includes("Modified") ? "bg-yellow-500/10 text-yellow-400" :
-                              "bg-slate-800 text-slate-400"
+                              entry.event_type.includes("Granted") || entry.event_type.includes("Completed") ? "bg-status-success-bg text-status-success" :
+                              entry.event_type.includes("Rejected") || entry.event_type.includes("Failed") ? "bg-status-error-bg text-status-error" :
+                              entry.event_type.includes("Escalated") ? "bg-violet-100 text-violet-700" :
+                              entry.event_type.includes("Modified") ? "bg-status-warning-bg text-status-warning" :
+                              "bg-secondary text-muted-foreground"
                             }`}>
                               {entry.event_type}
                             </span>
                           </td>
-                          <td className="py-2 pr-4 text-slate-300">{entry.actor}</td>
-                          <td className="py-2 pr-4 text-cyan-400 font-mono text-[10px]">{entry.artifact_id ? entry.artifact_id.slice(0, 8) + "..." : "—"}</td>
-                          <td className="py-2 text-slate-400 text-[10px] max-w-[200px] truncate">
+                          <td className="py-2 pr-4 text-foreground">{entry.actor}</td>
+                          <td className="py-2 pr-4 text-primary font-mono text-[10px]">{entry.artifact_id ? entry.artifact_id.slice(0, 8) + "..." : "—"}</td>
+                          <td className="py-2 text-muted-foreground text-[10px] max-w-[200px] truncate">
                             {Object.entries(entry.details).filter(([, v]) => v !== null && v !== "" && v !== 0).slice(0, 3).map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v).slice(0, 30) : String(v)}`).join(" | ")}
                           </td>
                         </tr>
@@ -941,37 +927,30 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
       </section>
 
       {/* ── Observability Metrics ──────────────────────────────────────── */}
-      <section className="bg-slate-950 rounded-xl p-4 border border-slate-800 shadow-lg">
-        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Approval Observability</h4>
+      <section className="bg-card rounded-xl p-4 border border-border shadow-sm">
+        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Approval Observability</h4>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-center">
-          <div className="bg-slate-900/40 rounded-lg p-2.5 border border-slate-900">
-            <span className="text-[9px] text-slate-500 block">Review Time</span>
-            <span className="text-sm font-bold text-slate-200">
-              {isDecisionMade ? `${Math.round((Date.now() - reviewStartTime) / 1000)}s` : "Active"}
-            </span>
-          </div>
-          <div className="bg-slate-900/40 rounded-lg p-2.5 border border-slate-900">
-            <span className="text-[9px] text-slate-500 block">Reviewer</span>
-            <span className="text-sm font-bold text-slate-200">{approvalPayload?.reviewer || reviewer || "Unassigned"}</span>
-          </div>
-          <div className="bg-slate-900/40 rounded-lg p-2.5 border border-slate-900">
-            <span className="text-[9px] text-slate-500 block">Final Status</span>
-            <span className="text-sm font-bold capitalize" style={{ color: finalStatus === "approved" ? "#34d399" : finalStatus === "rejected" ? "#fb7185" : finalStatus === "modified" ? "#fbbf24" : finalStatus === "escalated" ? "#a78bfa" : "#60a5fa" }}>
-              {finalStatus}
-            </span>
-          </div>
-          <div className="bg-slate-900/40 rounded-lg p-2.5 border border-slate-900">
-            <span className="text-[9px] text-slate-500 block">Escalation Signals</span>
-            <span className="text-sm font-bold text-slate-200">{escalationSignals.length}</span>
-          </div>
-          <div className="bg-slate-900/40 rounded-lg p-2.5 border border-slate-900">
-            <span className="text-[9px] text-slate-500 block">Feedback Items</span>
-            <span className="text-sm font-bold text-slate-200">{feedbackItems.length + (approvalPayload?.feedback_items?.length ?? 0)}</span>
-          </div>
-          <div className="bg-slate-900/40 rounded-lg p-2.5 border border-slate-900">
-            <span className="text-[9px] text-slate-500 block">Audit Events</span>
-            <span className="text-sm font-bold text-slate-200">{auditHistory.length}</span>
-          </div>
+          {[
+            { label: "Review Time",       value: isDecisionMade ? `${Math.round((Date.now() - reviewStartTime) / 1000)}s` : "Active" },
+            { label: "Reviewer",          value: approvalPayload?.reviewer || reviewer || "Unassigned" },
+            { label: "Final Status",      value: finalStatus, highlight: true },
+            { label: "Escalation Signals",value: String(escalationSignals.length) },
+            { label: "Feedback Items",    value: String(feedbackItems.length + (approvalPayload?.feedback_items?.length ?? 0)) },
+            { label: "Audit Events",      value: String(auditHistory.length) },
+          ].map(({ label, value, highlight }) => (
+            <div key={label} className="bg-secondary/40 rounded-lg p-2.5 border border-border">
+              <span className="text-[9px] text-muted-foreground block mb-0.5">{label}</span>
+              <span className={`text-sm font-bold capitalize ${highlight
+                ? finalStatus === "approved" ? "text-status-success"
+                  : finalStatus === "rejected" ? "text-status-error"
+                  : finalStatus === "modified" ? "text-status-warning"
+                  : finalStatus === "escalated" ? "text-violet-600"
+                  : "text-primary"
+                : "text-foreground"}`}>
+                {value}
+              </span>
+            </div>
+          ))}
         </div>
       </section>
     </div>
