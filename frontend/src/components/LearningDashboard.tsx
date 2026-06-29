@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Brain, TrendingUp, Lightbulb, AlertTriangle, CheckCircle2, XCircle, Sparkles, History, ExternalLink } from "lucide-react";
+import { Brain, TrendingUp, Lightbulb, AlertTriangle, CheckCircle2, XCircle, Sparkles, History } from "lucide-react";
 import { WorkflowState } from "../types/agent";
 import { api } from "../lib/api";
 
@@ -16,11 +16,10 @@ interface LearningDashboardProps {
 
 export default function LearningDashboard({ workflowState }: LearningDashboardProps) {
   const artifact = workflowState?.learning_artifact;
-  const [ready, setReady] = useState(false);
   const [historicalDNA, setHistoricalDNA] = useState<any[]>([]);
 
   useEffect(() => {
-    if (artifact?.payload) setReady(true);
+    // artifact loaded
   }, [artifact]);
 
   // Load real historical workflows, fall back to seed data
@@ -84,7 +83,7 @@ export default function LearningDashboard({ workflowState }: LearningDashboardPr
 
       {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+        <div className="bg-card border border-border rounded-2xl p-5 shadow-card">
           <div className="flex items-center gap-2 mb-4">
             <Lightbulb size={16} className="text-amber-500" />
             <h3 className="font-semibold text-foreground text-sm">Organizational Insights</h3>
@@ -99,7 +98,7 @@ export default function LearningDashboard({ workflowState }: LearningDashboardPr
           </ul>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+        <div className="bg-card border border-border rounded-2xl p-5 shadow-card">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={16} className="text-primary" />
             <h3 className="font-semibold text-foreground text-sm">Strategy Success Patterns</h3>
@@ -117,7 +116,7 @@ export default function LearningDashboard({ workflowState }: LearningDashboardPr
 
       {/* Accepted / Rejected */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+        <div className="bg-card border border-border rounded-2xl p-5 shadow-card">
           <div className="flex items-center gap-2 mb-3">
             <CheckCircle2 size={15} className="text-status-success" />
             <h3 className="text-sm font-semibold text-foreground">Accepted Patterns</h3>
@@ -129,7 +128,7 @@ export default function LearningDashboard({ workflowState }: LearningDashboardPr
           </div>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+        <div className="bg-card border border-border rounded-2xl p-5 shadow-card">
           <div className="flex items-center gap-2 mb-3">
             <XCircle size={15} className="text-status-error" />
             <h3 className="text-sm font-semibold text-foreground">Rejected Patterns</h3>
@@ -143,7 +142,7 @@ export default function LearningDashboard({ workflowState }: LearningDashboardPr
       </div>
 
       {/* Optimization */}
-      <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+      <div className="bg-card border border-border rounded-2xl p-5 shadow-card">
         <div className="flex items-center gap-2 mb-4">
           <Sparkles size={16} className="text-violet-500" />
           <h3 className="text-sm font-semibold text-foreground">Optimization Recommendations</h3>
@@ -170,7 +169,7 @@ export default function LearningDashboard({ workflowState }: LearningDashboardPr
 
       {/* Common risks */}
       {p.common_risks?.length > 0 && (
-        <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+        <div className="bg-card border border-border rounded-2xl p-5 shadow-card">
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle size={15} className="text-status-warning" />
             <h3 className="text-sm font-semibold text-foreground">Common Risks Identified</h3>
@@ -184,7 +183,7 @@ export default function LearningDashboard({ workflowState }: LearningDashboardPr
       )}
 
       {/* Decision DNA — Organizational Memory */}
-      <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+      <div className="bg-card border border-border rounded-2xl p-5 shadow-card">
         <div className="flex items-center gap-2 mb-4">
           <History size={16} className="text-primary" />
           <h3 className="text-sm font-semibold text-foreground">Decision DNA — Similar Historical Decisions</h3>
@@ -217,3 +216,5 @@ export default function LearningDashboard({ workflowState }: LearningDashboardPr
     </div>
   );
 }
+
+

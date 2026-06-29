@@ -3,7 +3,8 @@ import uuid
 import datetime
 import logging
 import os
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, text, Float, JSON, select, delete, func
+import re
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, text, Float, JSON, select, delete, func, or_, literal
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.dialects.postgresql import UUID
 from qdrant_client import AsyncQdrantClient
@@ -306,9 +307,32 @@ async def search_semantic(session, query_embedding: list[float], limit: int = 5)
 
 
 async def search_fts(session, keyword_query: str, limit: int = 5) -> list[tuple[DBDocumentChunk, DBDocument, float]]:
+    dialect_name = getattr(getattr(session, "bind", None), "dialect", None)
+    dialect_name = getattr(dialect_name, "name", "")
+
+    if dialect_name == "sqlite":
+        tokens = [token.lower() for token in re.findall(r"[A-Za-z0-9]+", keyword_query) if len(token) > 2][:12]
+        if not tokens:
+            return []
+
+        match_conditions = [func.lower(DBDocumentChunk.content).like(f"%{token}%") for token in tokens]
+        stmt = (
+            select(
+                DBDocumentChunk,
+                DBDocument,
+                literal(1.0).label("rank"),
+            )
+            .join(DBDocument, DBDocument.id == DBDocumentChunk.document_id)
+            .where(DBDocument.status == "completed")
+            .where(or_(*match_conditions))
+            .limit(limit)
+        )
+        result = await session.execute(stmt)
+        return list(result.all())
+
     stmt = (
         select(
-            DBDocumentChunk, 
+            DBDocumentChunk,
             DBDocument,
             func.ts_rank_cd(
                 func.to_tsvector("english", DBDocumentChunk.content),

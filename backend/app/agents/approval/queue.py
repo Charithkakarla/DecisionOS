@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import logging
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from app.core.config import settings
@@ -67,7 +67,7 @@ def build_learning_queue_entry(
     Returns:
         LearningQueue entry dict ready for DB and Redis persistence.
     """
-    now = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    now = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     queue_id = str(uuid.uuid4())
 
     signal_type = _SIGNAL_TYPE.get(approval_status.lower(), "neutral")

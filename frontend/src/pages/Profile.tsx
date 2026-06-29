@@ -3,13 +3,13 @@ import { User, Mail, Shield, Key } from "lucide-react";
 
 export function Profile() {
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-4xl mx-auto space-y-8 animate-in slide-up duration-300">
       <PageHeader 
         title="User Profile" 
         description="Manage your personal account settings and security."
       />
 
-      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-card">
         <div className="p-8 border-b border-border flex items-center space-x-6 bg-secondary/30">
           <div className="h-24 w-24 rounded-full bg-background border-2 border-primary/20 flex items-center justify-center shadow-sm">
             <User size={40} className="text-primary" />
@@ -63,3 +63,7 @@ export function Profile() {
     </div>
   );
 }
+
+
+
+

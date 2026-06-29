@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from app.agents.approval.schemas import FeedbackItem
@@ -53,7 +53,7 @@ def build_feedback_record(
     Returns:
         A structured dict suitable for DB insert and Learning Queue entry.
     """
-    now = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    now = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     record_id = str(uuid.uuid4())
 
     # Derive a category for each feedback item for learning signal classification

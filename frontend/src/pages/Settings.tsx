@@ -3,7 +3,7 @@ import { Settings as SettingsIcon, Database, Cpu, Palette, Users } from "lucide-
 
 export function Settings() {
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in slide-up duration-300">
       <PageHeader 
         title="Settings" 
         description="Configure LLM providers, database connections, and system themes."
@@ -20,7 +20,7 @@ export function Settings() {
           ].map((tab, i) => (
             <button 
               key={i}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-colors ${
                 tab.active ? "bg-secondary text-primary font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
             >
@@ -31,7 +31,7 @@ export function Settings() {
         </div>
 
         <div className="md:col-span-3 space-y-6">
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
             <h3 className="text-lg font-medium text-foreground mb-4">System Preferences</h3>
             <div className="space-y-4">
               <div>
@@ -54,3 +54,5 @@ export function Settings() {
     </div>
   );
 }
+
+

@@ -2,7 +2,11 @@
 from io import BytesIO
 import logging
 from pypdf import PdfReader
-from docx import Document
+
+try:
+    from docx import Document
+except ImportError:  # DOCX support is optional at runtime.
+    Document = None
 
 logger = logging.getLogger("decision_os.knowledge.ingest")
 
@@ -26,6 +30,8 @@ def extract_text_from_pdf(content: bytes) -> list[dict]:
 def extract_text_from_docx(content: bytes) -> list[dict]:
     results = []
     try:
+        if Document is None:
+            raise ValueError("DOCX parsing support is unavailable because python-docx is not installed.")
         doc = Document(BytesIO(content))
         current_section = "Intro"
         paragraph_text_block = []

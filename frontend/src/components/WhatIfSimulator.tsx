@@ -204,7 +204,7 @@ export default function WhatIfSimulator({ decisionPackage }: Props) {
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Controls — 2 cols */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-5">
+        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-card space-y-5">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Simulation Parameters</p>
 
           <div className="space-y-1">
@@ -241,7 +241,7 @@ export default function WhatIfSimulator({ decisionPackage }: Props) {
         {/* Results — 3 cols */}
         <div className="lg:col-span-3 space-y-5">
           {/* Score recalculation */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm" key={`scores-${animKey}`}>
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-card" key={`scores-${animKey}`}>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Recalculated Scores</p>
             <div className="space-y-4">
               <ScoreBar label="Opportunity Score"  value={result.opportunityScore} baseline={baseOpp}  color="bg-emerald-500" />
@@ -253,7 +253,7 @@ export default function WhatIfSimulator({ decisionPackage }: Props) {
           </div>
 
           {/* ROI */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-card">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Simulated ROI</p>
             <div className="flex items-end gap-3">
               <span className="text-4xl font-black text-slate-800">${(result.roi / 1000).toFixed(0)}K</span>
@@ -262,7 +262,7 @@ export default function WhatIfSimulator({ decisionPackage }: Props) {
           </div>
 
           {/* Recommendation ranking */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-card">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Recommendation Ranking Under Simulation</p>
             <div className="space-y-3">
               {result.rankedRecs.map((r, i) => (
@@ -285,7 +285,7 @@ export default function WhatIfSimulator({ decisionPackage }: Props) {
           </div>
 
           {/* KPIs */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-card">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">KPI Impact</p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {result.kpis.map((k) => (
@@ -308,3 +308,4 @@ export default function WhatIfSimulator({ decisionPackage }: Props) {
     </div>
   );
 }
+

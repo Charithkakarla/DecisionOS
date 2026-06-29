@@ -19,7 +19,7 @@ interface Critique {
 }
 
 function buildCritiques(recommendations: Recommendation[], decPkg: DecisionPackage): Critique[] {
-  return recommendations.map((rec, idx) => {
+  return recommendations.map((rec) => {
     const riskLevel = rec.risk_level;
     const confidence = rec.confidence;
     const hasEvidence = rec.similarity_score > 0.6;
@@ -83,14 +83,14 @@ function buildCritiques(recommendations: Recommendation[], decPkg: DecisionPacka
     const confidenceImpact = confidence >= 0.8
       ? "High confidence — strong basis for proceeding. Minor unknowns are acceptable."
       : confidence >= 0.6
-      ? "Moderate confidence — proceed but establish checkpoints to validate assumptions."
-      : "Low confidence — significant uncertainty exists. Gather additional data before approval.";
+        ? "Moderate confidence — proceed but establish checkpoints to validate assumptions."
+        : "Low confidence — significant uncertainty exists. Gather additional data before approval.";
 
     const whenAlternativeWins = isHighRisk
       ? "If budget constraints tighten or compliance requirements change, the lower-risk alternative gains priority."
       : isMediumRisk
-      ? `If resource availability is lower than expected, "${alternative}" becomes the stronger choice.`
-      : `If speed is prioritized over thoroughness, "${alternative}" may deliver faster results.`;
+        ? `If resource availability is lower than expected, "${alternative}" becomes the stronger choice.`
+        : `If speed is prioritized over thoroughness, "${alternative}" may deliver faster results.`;
 
     return {
       recId: rec.id,

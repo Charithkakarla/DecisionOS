@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { FileText, Download, Loader2, CheckCircle2, LayoutTemplate, Presentation, Sheet, Printer } from "lucide-react";
+import { FileText, Download, Loader2, CheckCircle2, LayoutTemplate, Presentation, Sheet } from "lucide-react";
 import type { WorkflowState } from "../types/agent";
 
 interface Props { workflowState: WorkflowState; }
@@ -8,98 +8,98 @@ type ReportFormat = "pdf" | "docx" | "pptx";
 type ReportTemplate = "executive_summary" | "detailed" | "board";
 
 const TEMPLATES: { id: ReportTemplate; label: string; desc: string; pages: string; icon: React.ReactNode }[] = [
-  { id: "executive_summary", label: "Executive Summary",   desc: "One-page brief for C-suite",          pages: "1 page",     icon: <FileText size={16} /> },
-  { id: "detailed",          label: "Detailed Report",     desc: "Full analysis, 10–20 pages",          pages: "10–20 pages", icon: <LayoutTemplate size={16} /> },
-  { id: "board",             label: "Board Presentation",  desc: "10-slide PowerPoint deck",            pages: "10 slides",   icon: <Presentation size={16} /> },
+  { id: "executive_summary", label: "Executive Summary", desc: "One-page brief for C-suite", pages: "1 page", icon: <FileText size={16} /> },
+  { id: "detailed", label: "Detailed Report", desc: "Full analysis, 10–20 pages", pages: "10–20 pages", icon: <LayoutTemplate size={16} /> },
+  { id: "board", label: "Board Presentation", desc: "10-slide PowerPoint deck", pages: "10 slides", icon: <Presentation size={16} /> },
 ];
 
 const FORMATS: { id: ReportFormat; label: string; icon: React.ReactNode }[] = [
-  { id: "pdf",   label: "PDF",        icon: <FileText size={14} /> },
-  { id: "docx",  label: "Word / DOCX", icon: <Sheet size={14} /> },
-  { id: "pptx",  label: "PowerPoint", icon: <Presentation size={14} /> },
+  { id: "pdf", label: "PDF", icon: <FileText size={14} /> },
+  { id: "docx", label: "Word / DOCX", icon: <Sheet size={14} /> },
+  { id: "pptx", label: "PowerPoint", icon: <Presentation size={14} /> },
 ];
 
 function buildReport(ws: WorkflowState, template: ReportTemplate): Record<string, any> {
-  const ctx   = ws.context_artifact?.payload as Record<string, any> | undefined;
-  const dec   = ws.decision_artifact?.payload;
+  const ctx = ws.context_artifact?.payload as Record<string, any> | undefined;
+  const dec = ws.decision_artifact?.payload;
   const strat = ws.strategy_artifact?.payload;
-  const ref   = ws.reflection_artifact?.payload;
+  const ref = ws.reflection_artifact?.payload;
   const learn = ws.learning_artifact?.payload;
 
   const topRec = dec?.recommendations?.[0];
-  const recs   = dec?.recommendations ?? [];
+  const recs = dec?.recommendations ?? [];
 
   return {
-    report_id:        `RPT-${ws.workflow_id ?? "0000"}`,
-    decision_id:      ws.workflow_id ?? "N/A",
-    execution_id:     ws.execution_id ?? "N/A",
-    schema_version:   dec?.schema_version ?? "1.1.0",
-    prompt_version:   "1.0.0",
-    generated_at:     new Date().toISOString(),
+    report_id: `RPT-${ws.workflow_id ?? "0000"}`,
+    decision_id: ws.workflow_id ?? "N/A",
+    execution_id: ws.execution_id ?? "N/A",
+    schema_version: dec?.schema_version ?? "1.1.0",
+    prompt_version: "1.0.0",
+    generated_at: new Date().toISOString(),
     template,
 
-    executive_summary:  dec?.executive_summary ?? "AI-generated analysis of customer interaction.",
-    business_goal:      dec?.business_goal ?? ctx?.business_goal ?? "Not specified",
-    current_context:    ctx?.meeting_summary ?? "Interaction transcript processed.",
-    buying_stage:       ctx?.buying_stage ?? "Discovery",
-    decision_status:    ref?.validation_status === "passed" ? "Approved for Review" : "Pending Validation",
+    executive_summary: dec?.executive_summary ?? "AI-generated analysis of customer interaction.",
+    business_goal: dec?.business_goal ?? ctx?.business_goal ?? "Not specified",
+    current_context: ctx?.meeting_summary ?? "Interaction transcript processed.",
+    buying_stage: ctx?.buying_stage ?? "Discovery",
+    decision_status: ref?.validation_status === "passed" ? "Approved for Review" : "Pending Validation",
 
     decision_readiness: dec?.business_scores?.decision_readiness ?? 0,
-    trust_score:        ref?.overall_trust_score ?? 0,
-    governance_score:   ref?.governance_score ?? 0,
-    confidence:         dec?.confidence?.overall_confidence ?? 0,
+    trust_score: ref?.overall_trust_score ?? 0,
+    governance_score: ref?.governance_score ?? 0,
+    confidence: dec?.confidence?.overall_confidence ?? 0,
 
     top_recommendation: topRec ? {
-      title:      topRec.title,
-      description:topRec.description,
-      reasoning:  topRec.reasoning,
-      timeline:   topRec.timeline,
+      title: topRec.title,
+      description: topRec.description,
+      reasoning: topRec.reasoning,
+      timeline: topRec.timeline,
       risk_level: topRec.risk_level,
       confidence: topRec.confidence,
-      citation:   topRec.citation,
+      citation: topRec.citation,
     } : null,
 
     all_recommendations: recs.map((r) => ({
-      rank:        r.rank,
-      title:       r.title,
+      rank: r.rank,
+      title: r.title,
       description: r.description,
-      risk_level:  r.risk_level,
-      confidence:  r.confidence,
-      timeline:    r.timeline,
+      risk_level: r.risk_level,
+      confidence: r.confidence,
+      timeline: r.timeline,
     })),
 
     assumptions: dec?.assumptions ?? [],
     constraints: dec?.constraints ?? [],
-    tradeoffs:   dec?.tradeoffs ?? [],
-    risks:       strat?.risks ?? [],
-    mitigation:  strat?.mitigation_plan ?? [],
+    tradeoffs: dec?.tradeoffs ?? [],
+    risks: strat?.risks ?? [],
+    mitigation: strat?.mitigation_plan ?? [],
 
-    roi:                       strat?.estimated_roi ?? dec?.analysis?.estimated_revenue ?? 0,
-    implementation_timeline:   strat?.implementation_timeline ?? "TBD",
-    success_probability:       strat?.estimated_success_probability ?? 0,
+    roi: strat?.estimated_roi ?? dec?.analysis?.estimated_revenue ?? 0,
+    implementation_timeline: strat?.implementation_timeline ?? "TBD",
+    success_probability: strat?.estimated_success_probability ?? 0,
     implementation_complexity: strat?.implementation_complexity ?? "Medium",
 
     business_impact: strat?.business_impact ?? {},
-    scenarios:       strat?.scenarios ?? [],
+    scenarios: strat?.scenarios ?? [],
 
-    missing_information:     dec?.missing_information ?? [],
-    warnings:                ref?.warnings ?? [],
-    critical_findings:       ref?.critical_findings ?? [],
+    missing_information: dec?.missing_information ?? [],
+    warnings: ref?.warnings ?? [],
+    critical_findings: ref?.critical_findings ?? [],
     improvement_suggestions: ref?.improvement_suggestions ?? [],
 
     evidence_used: (dec?.evidence_used ?? []).slice(0, 5).map((e: any) => ({
-      document:   e.document_id,
+      document: e.document_id,
       similarity: e.similarity_score,
-      snippet:    e.quoted_evidence?.substring(0, 120) ?? "",
+      snippet: e.quoted_evidence?.substring(0, 120) ?? "",
     })),
 
     // Learning section
-    learning_summary:          learn?.learning_summary ?? "",
-    organizational_insights:   learn?.organizational_insights ?? [],
+    learning_summary: learn?.learning_summary ?? "",
+    organizational_insights: learn?.organizational_insights ?? [],
     strategy_success_patterns: learn?.strategy_success_patterns ?? [],
-    knowledge_gaps:            learn?.knowledge_gaps ?? [],
-    prompt_improvements:       learn?.prompt_improvement_suggestions ?? [],
-    accepted_patterns:         learn?.accepted_patterns ?? [],
+    knowledge_gaps: learn?.knowledge_gaps ?? [],
+    prompt_improvements: learn?.prompt_improvement_suggestions ?? [],
+    accepted_patterns: learn?.accepted_patterns ?? [],
     organizational_memory_ref: learn?.organizational_memory_reference ?? "",
   };
 }
@@ -130,10 +130,10 @@ function ReportPreview({ data, template }: { data: Record<string, any>; template
 
         <div className="grid grid-cols-4 gap-3 mt-5">
           {[
-            { label: "Trust Score",    value: fmt(data.trust_score) },
-            { label: "Confidence",     value: fmt(data.confidence) },
-            { label: "ROI",            value: currency(data.roi) },
-            { label: "Decision",       value: data.decision_status },
+            { label: "Trust Score", value: fmt(data.trust_score) },
+            { label: "Confidence", value: fmt(data.confidence) },
+            { label: "ROI", value: currency(data.roi) },
+            { label: "Decision", value: data.decision_status },
           ].map((m) => (
             <div key={m.label} className="bg-slate-800 rounded-lg p-2 text-center">
               <div className="text-base font-bold text-white">{m.value}</div>
@@ -156,10 +156,10 @@ function ReportPreview({ data, template }: { data: Record<string, any>; template
           <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest border-b pb-1 mb-3 font-sans">2. Decision Quality Metrics</h2>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Decision Readiness",    v: data.decision_readiness },
-              { label: "AI Trust Score",        v: data.trust_score },
-              { label: "Governance Adherence",  v: data.governance_score },
-              { label: "Overall Confidence",    v: data.confidence },
+              { label: "Decision Readiness", v: data.decision_readiness },
+              { label: "AI Trust Score", v: data.trust_score },
+              { label: "Governance Adherence", v: data.governance_score },
+              { label: "Overall Confidence", v: data.confidence },
             ].map(({ label, v }) => (
               <div key={label} className="flex items-center gap-3">
                 <div className="flex-1">
@@ -203,9 +203,9 @@ function ReportPreview({ data, template }: { data: Record<string, any>; template
             <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest border-b pb-1 mb-3 font-sans">4. Business Impact & ROI</h2>
             <div className="grid grid-cols-3 gap-3 text-center">
               {[
-                { label: "Est. ROI",           value: currency(data.roi) },
+                { label: "Est. ROI", value: currency(data.roi) },
                 { label: "Success Probability", value: fmt(data.success_probability) },
-                { label: "Timeline",            value: data.implementation_timeline },
+                { label: "Timeline", value: data.implementation_timeline },
               ].map((m) => (
                 <div key={m.label} className="bg-slate-50 border border-slate-100 rounded-lg p-3">
                   <div className="text-lg font-bold text-slate-800">{m.value}</div>
@@ -299,10 +299,10 @@ function ReportPreview({ data, template }: { data: Record<string, any>; template
 }
 
 export default function ExecutiveReport({ workflowState }: Props) {
-  const [template, setTemplate]     = useState<ReportTemplate>("executive_summary");
-  const [format, setFormat]         = useState<ReportFormat>("pdf");
+  const [template, setTemplate] = useState<ReportTemplate>("executive_summary");
+  const [format, setFormat] = useState<ReportFormat>("pdf");
   const [generating, setGenerating] = useState(false);
-  const [generated, setGenerated]   = useState(false);
+  const [generated, setGenerated] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -319,7 +319,6 @@ export default function ExecutiveReport({ workflowState }: Props) {
 
   const handleDownloadPDF = () => {
     if (!previewRef.current) return;
-    const content = previewRef.current.innerHTML;
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) { alert("Please allow popups to download the PDF."); return; }
     win.document.write(`
@@ -402,8 +401,8 @@ export default function ExecutiveReport({ workflowState }: Props) {
                 <h2>2. Decision Quality Metrics</h2>
                 <div class="score-row">
                   ${[["Decision Readiness", reportData.decision_readiness], ["Trust Score", reportData.trust_score], ["Governance", reportData.governance_score], ["Confidence", reportData.confidence]].map(([l, v]) =>
-                    `<div class="score-item"><div class="score-label">${l} — ${Math.round(Number(v)*100)}%</div><div class="score-bar"><div class="score-fill" style="width:${Math.round(Number(v)*100)}%"></div></div></div>`
-                  ).join("")}
+      `<div class="score-item"><div class="score-label">${l} — ${Math.round(Number(v) * 100)}%</div><div class="score-bar"><div class="score-fill" style="width:${Math.round(Number(v) * 100)}%"></div></div></div>`
+    ).join("")}
                 </div>
               </section>
               <section>
@@ -417,7 +416,7 @@ export default function ExecutiveReport({ workflowState }: Props) {
                       <div style="margin-top:5px">
                         <span class="badge badge-${r.risk_level?.toLowerCase()}">${r.risk_level} Risk</span>
                         <span class="badge" style="background:#f1f5f9;color:#475569">${r.timeline}</span>
-                        <span class="badge" style="background:#eff6ff;color:#1d4ed8">${Math.round(r.confidence*100)}% confidence</span>
+                        <span class="badge" style="background:#eff6ff;color:#1d4ed8">${Math.round(r.confidence * 100)}% confidence</span>
                       </div>
                     </div>
                   </div>
@@ -427,15 +426,15 @@ export default function ExecutiveReport({ workflowState }: Props) {
               <section>
                 <h2>4. Business Impact & ROI</h2>
                 <div class="impact-grid">
-                  <div class="impact-box"><div class="impact-val">$${(reportData.roi/1000).toFixed(0)}K</div><div class="impact-lbl">Est. ROI</div></div>
-                  <div class="impact-box"><div class="impact-val">${Math.round(reportData.success_probability*100)}%</div><div class="impact-lbl">Success Probability</div></div>
+                  <div class="impact-box"><div class="impact-val">$${(reportData.roi / 1000).toFixed(0)}K</div><div class="impact-lbl">Est. ROI</div></div>
+                  <div class="impact-box"><div class="impact-val">${Math.round(reportData.success_probability * 100)}%</div><div class="impact-lbl">Success Probability</div></div>
                   <div class="impact-box"><div class="impact-val">${reportData.implementation_timeline}</div><div class="impact-lbl">Timeline</div></div>
                 </div>
               </section>` : ""}
               ${reportData.risks.length > 0 ? `
               <section>
                 <h2>5. Risk Factors</h2>
-                ${reportData.risks.slice(0,4).map((r: string) => `<p>• ${r}</p>`).join("")}
+                ${reportData.risks.slice(0, 4).map((r: string) => `<p>• ${r}</p>`).join("")}
               </section>` : ""}
               ${reportData.evidence_used.length > 0 ? `
               <section>
@@ -443,7 +442,7 @@ export default function ExecutiveReport({ workflowState }: Props) {
                 ${reportData.evidence_used.map((e: any) => `
                   <div class="ev-item">
                     <span class="ev-doc">${e.document}</span>
-                    <span style="font-size:10px;color:#64748b;margin-left:6px">Similarity: ${Math.round(e.similarity*100)}%</span>
+                    <span style="font-size:10px;color:#64748b;margin-left:6px">Similarity: ${Math.round(e.similarity * 100)}%</span>
                     <p style="margin-top:4px;font-style:italic;color:#475569">"${e.snippet}..."</p>
                   </div>
                 `).join("")}
@@ -469,9 +468,9 @@ export default function ExecutiveReport({ workflowState }: Props) {
     if (format === "pdf") { handleDownloadPDF(); return; }
     // For docx/pptx — export report data as JSON for now
     const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: "application/json" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href     = url;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
     a.download = `${reportData.report_id}.${format === "docx" ? "json" : "json"}`;
     a.click();
     URL.revokeObjectURL(url);
@@ -492,7 +491,7 @@ export default function ExecutiveReport({ workflowState }: Props) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Settings panel */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-6">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-card space-y-6">
 
           {/* Template */}
           <div>
@@ -535,11 +534,11 @@ export default function ExecutiveReport({ workflowState }: Props) {
           <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-1.5">
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Report Metadata</p>
             {[
-              ["Report ID",    reportData.report_id],
-              ["Decision ID",  reportData.decision_id],
-              ["Schema",       `v${reportData.schema_version}`],
-              ["Template",     TEMPLATES.find((t) => t.id === template)?.label ?? ""],
-              ["Format",       format.toUpperCase()],
+              ["Report ID", reportData.report_id],
+              ["Decision ID", reportData.decision_id],
+              ["Schema", `v${reportData.schema_version}`],
+              ["Template", TEMPLATES.find((t) => t.id === template)?.label ?? ""],
+              ["Format", format.toUpperCase()],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between text-[10px]">
                 <span className="text-slate-400">{k}</span>
@@ -589,3 +588,4 @@ export default function ExecutiveReport({ workflowState }: Props) {
     </div>
   );
 }
+

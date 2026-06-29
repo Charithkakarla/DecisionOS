@@ -16,7 +16,7 @@ interface ReadinessMetric {
 
 function computeReadiness(ws: WorkflowState): { metrics: ReadinessMetric[]; overall: number; missing: string[]; status: "ready" | "caution" | "not-ready" } {
   const ctx = ws.context_artifact?.payload as Record<string, any> | undefined;
-  const kb  = ws.knowledge_artifact?.payload;
+  const kb = ws.knowledge_artifact?.payload;
   const dec = ws.decision_artifact?.payload;
 
   const metrics: ReadinessMetric[] = [
@@ -60,7 +60,7 @@ function computeReadiness(ws: WorkflowState): { metrics: ReadinessMetric[]; over
       weight: 0.10,
       score: ctx?.compliance_requirements?.length > 0 ? 1 : 0.4,
       status: ctx?.compliance_requirements?.length > 0 ? "ready" : "partial",
-      reason: ctx?.compliance_requirements?.length > 0 ? `${ctx.compliance_requirements.length} compliance req(s)` : "No compliance requirements captured",
+      reason: ctx?.compliance_requirements?.length > 0 ? `${ctx?.compliance_requirements?.length ?? 0} compliance req(s)` : "No compliance requirements captured",
     },
     {
       label: "Risk Identification",
@@ -89,15 +89,15 @@ export default function DecisionReadiness({ workflowState }: Props) {
   const gaugeColor = status === "ready" ? "#22c55e" : status === "caution" ? "#f59e0b" : "#ef4444";
   const statusLabel = status === "ready" ? "Ready to Decide" : status === "caution" ? "Proceed with Caution" : "Insufficient Information";
   const statusBg = status === "ready" ? "bg-emerald-50 border-emerald-200 text-emerald-800" :
-                   status === "caution" ? "bg-amber-50 border-amber-200 text-amber-800" :
-                   "bg-rose-50 border-rose-200 text-rose-800";
+    status === "caution" ? "bg-amber-50 border-amber-200 text-amber-800" :
+      "bg-rose-50 border-rose-200 text-rose-800";
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Gauge */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center shadow-card">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Decision Readiness</p>
           <div className="relative w-36 h-36">
             <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
@@ -124,14 +124,14 @@ export default function DecisionReadiness({ workflowState }: Props) {
         </div>
 
         {/* Metric bars */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-card">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Readiness Breakdown</p>
           <div className="space-y-3.5">
             {metrics.map((m) => (
               <div key={m.label}>
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5">
-                    {m.status === "ready"   && <CheckCircle2 size={12} className="text-emerald-500" />}
+                    {m.status === "ready" && <CheckCircle2 size={12} className="text-emerald-500" />}
                     {m.status === "partial" && <AlertTriangle size={12} className="text-amber-500" />}
                     {m.status === "missing" && <XCircle size={12} className="text-rose-500" />}
                     <span className="text-xs font-semibold text-slate-700">{m.label}</span>
@@ -141,9 +141,8 @@ export default function DecisionReadiness({ workflowState }: Props) {
                 </div>
                 <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all duration-700 ${
-                      m.status === "ready" ? "bg-emerald-500" : m.status === "partial" ? "bg-amber-400" : "bg-rose-400"
-                    }`}
+                    className={`h-full rounded-full transition-all duration-700 ${m.status === "ready" ? "bg-emerald-500" : m.status === "partial" ? "bg-amber-400" : "bg-rose-400"
+                      }`}
                     style={{ width: `${m.score * 100}%` }}
                   />
                 </div>
@@ -187,3 +186,4 @@ export default function DecisionReadiness({ workflowState }: Props) {
     </div>
   );
 }
+

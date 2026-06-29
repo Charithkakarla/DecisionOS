@@ -3,7 +3,12 @@ import json
 import logging
 import hashlib
 from typing import Any
-import redis
+
+try:
+    import redis
+except ImportError:  # Redis cache is optional; fall back to the database path when unavailable.
+    redis = None
+
 from app.core.config import settings
 
 logger = logging.getLogger("decision_os.knowledge.cache")
@@ -12,7 +17,7 @@ class RedisCacheService:
     def __init__(self) -> None:
         self.redis_client = None
         try:
-            if settings.redis_url:
+            if redis is not None and settings.redis_url:
                 self.redis_client = redis.Redis.from_url(
                     settings.redis_url, 
                     decode_responses=True,
@@ -22,6 +27,8 @@ class RedisCacheService:
                 # Test connection
                 self.redis_client.ping()
                 logger.info("Connected to Redis cache successfully.")
+            elif settings.redis_url:
+                logger.info("Redis package is not installed; using database fallback for knowledge cache.")
         except Exception as e:
             logger.warning(f"Redis cache initialization failed, falling back to database: {e}")
             self.redis_client = None

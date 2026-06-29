@@ -126,7 +126,7 @@ export default function StrategyDashboard({ strategyPackage: sp }: Props) {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header card */}
-      <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+      <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -178,7 +178,7 @@ export default function StrategyDashboard({ strategyPackage: sp }: Props) {
 
       {/* Scenario Planning */}
       {sp.scenarios.length > 0 && (
-        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+        <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
           <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2"><span>🔭</span> Scenario Planning</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {sp.scenarios.map(sc => <ScenarioCard key={sc.scenario_type} scenario={sc} isSelected={sc.scenario_type === sp.selected_scenario} />)}
@@ -187,7 +187,7 @@ export default function StrategyDashboard({ strategyPackage: sp }: Props) {
       )}
 
       {/* Business Impact */}
-      <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+      <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
         <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2"><span>📈</span> Business Impact Analysis</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {impactMetrics.map(m => (
@@ -210,7 +210,7 @@ export default function StrategyDashboard({ strategyPackage: sp }: Props) {
 
       {/* Execution Roadmap */}
       {sp.execution_plan.length > 0 && (
-        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+        <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-foreground font-semibold flex items-center gap-2"><span>🗺</span> Execution Roadmap</h3>
             <span className="text-xs text-muted-foreground">{sp.execution_plan.length} phases · {sp.implementation_timeline}</span>
@@ -221,7 +221,7 @@ export default function StrategyDashboard({ strategyPackage: sp }: Props) {
 
       {/* Risks */}
       {sp.risks.length > 0 && (
-        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+        <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
           <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2"><span>⚠️</span> Risks & Mitigations</h3>
           <div className="space-y-3">
             {sp.risks.map((risk, idx) => (
@@ -245,7 +245,7 @@ export default function StrategyDashboard({ strategyPackage: sp }: Props) {
       {/* Resources + Stakeholders */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {sp.required_resources.length > 0 && (
-          <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+          <div className="bg-card border border-border rounded-2xl p-5 shadow-card">
             <h3 className="text-foreground font-semibold mb-3 flex items-center gap-2"><span>🛠</span> Required Resources</h3>
             <ul className="space-y-2">
               {sp.required_resources.map((r, i) => (
@@ -257,7 +257,7 @@ export default function StrategyDashboard({ strategyPackage: sp }: Props) {
           </div>
         )}
         {sp.stakeholder_plan.length > 0 && (
-          <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+          <div className="bg-card border border-border rounded-2xl p-5 shadow-card">
             <h3 className="text-foreground font-semibold mb-3 flex items-center gap-2"><span>👥</span> Stakeholder Plan</h3>
             <ul className="space-y-2">
               {sp.stakeholder_plan.map((s, i) => (
@@ -270,7 +270,7 @@ export default function StrategyDashboard({ strategyPackage: sp }: Props) {
 
       {/* Dependencies + Alternatives */}
       {sp.dependencies.length > 0 && (
-        <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+        <div className="bg-card border border-border rounded-2xl p-5 shadow-card">
           <h3 className="text-foreground font-semibold mb-3 flex items-center gap-2"><span>🔗</span> Dependencies</h3>
           <div className="flex flex-wrap gap-2">
             {sp.dependencies.map((d, i) => (
@@ -281,7 +281,7 @@ export default function StrategyDashboard({ strategyPackage: sp }: Props) {
       )}
 
       {sp.alternative_strategies.length > 0 && (
-        <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+        <div className="bg-card border border-border rounded-2xl p-5 shadow-card">
           <h3 className="text-foreground font-semibold mb-3 flex items-center gap-2"><span>🔀</span> Alternative Strategies</h3>
           <ul className="space-y-2">
             {sp.alternative_strategies.map((alt, i) => (
@@ -308,3 +308,5 @@ export default function StrategyDashboard({ strategyPackage: sp }: Props) {
     </div>
   );
 }
+
+

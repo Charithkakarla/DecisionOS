@@ -19,7 +19,7 @@ _ARTIFACT_NAMES: dict[str, str] = {
 def _now_iso() -> str:
     import datetime
 
-    return datetime.datetime.now(datetime.UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _extract_agent_event_fields(state: WorkflowState, step: str) -> tuple[str, float, str]:

@@ -3,13 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { PageHeader } from "../components/ui/PageHeader";
 import {
   RefreshCw, ChevronRight, CheckCircle2, AlertTriangle,
-  Loader2, Database, BrainCircuit, ShieldCheck,
+  Loader2, Database, ShieldCheck,
   Search, Filter, Inbox, Trash2, HardDrive, Cloud
 } from "lucide-react";
 import { api } from "../lib/api";
 import {
   loadIndex, loadWorkflowState, deleteWorkflowState, clearAllWorkflows,
-  type WorkflowIndexEntry,
 } from "../lib/workflowStore";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -51,20 +50,19 @@ function timeAgo(iso: string | null): string {
 function StatusBadge({ status }: { status: string }) {
   const s = status.toLowerCase();
   const cls = s === "completed"
-    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+    ? "bg-status-success-bg text-status-success border-status-success/20"
     : s === "running"
-    ? "bg-amber-50 text-amber-700 border-amber-200 animate-pulse"
-    : "bg-rose-50 text-rose-700 border-rose-200";
+      ? "bg-status-warning-bg text-status-warning border-status-warning/20 animate-pulse"
+      : "bg-status-error-bg text-status-error border-status-error/20";
   return <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${cls}`}>{status}</span>;
 }
 
 function SourceBadge({ source }: { source: MergedEntry["source"] }) {
   return (
-    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border flex items-center gap-1 ${
-      source === "local" ? "bg-violet-50 text-violet-600 border-violet-200" :
-      source === "db"    ? "bg-sky-50 text-sky-600 border-sky-200" :
-                           "bg-emerald-50 text-emerald-700 border-emerald-200"
-    }`}>
+    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border flex items-center gap-1 ${source === "local" ? "bg-secondary text-muted-foreground border-border" :
+        source === "db" ? "bg-primary/8 text-primary border-primary/15" :
+          "bg-status-success-bg text-status-success border-status-success/20"
+      }`}>
       {source === "local" ? <HardDrive size={9} /> : <Cloud size={9} />}
       {source === "both" ? "Local + DB" : source === "local" ? "Local" : "DB"}
     </span>
@@ -73,9 +71,9 @@ function SourceBadge({ source }: { source: MergedEntry["source"] }) {
 
 function RiskBadge({ level }: { level?: string }) {
   if (!level || level === "—" || level === "") return null;
-  const cls = level === "High"   ? "bg-rose-50 text-rose-600 border-rose-200"
-            : level === "Medium" ? "bg-amber-50 text-amber-600 border-amber-200"
-            :                      "bg-emerald-50 text-emerald-600 border-emerald-200";
+  const cls = level === "High" ? "bg-rose-50 text-rose-600 border-rose-200"
+    : level === "Medium" ? "bg-amber-50 text-amber-600 border-amber-200"
+      : "bg-emerald-50 text-emerald-600 border-emerald-200";
   return <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${cls}`}>{level} Risk</span>;
 }
 
@@ -84,11 +82,11 @@ function RiskBadge({ level }: { level?: string }) {
 export function WorkflowHistory() {
   const navigate = useNavigate();
 
-  const [entries,     setEntries]     = useState<MergedEntry[]>([]);
-  const [loading,     setLoading]     = useState(true);
-  const [loadingId,   setLoadingId]   = useState<string | null>(null);
-  const [search,      setSearch]      = useState("");
-  const [filterSrc,   setFilterSrc]   = useState<"all" | "local" | "db">("all");
+  const [entries, setEntries] = useState<MergedEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [filterSrc, setFilterSrc] = useState<"all" | "local" | "db">("all");
   const [confirmClear, setConfirmClear] = useState(false);
 
   // ── Build merged list ──────────────────────────────────────────────────────
@@ -101,7 +99,7 @@ export function WorkflowHistory() {
 
     // 2. DB list (async)
     let dbRuns: any[] = [];
-    try { dbRuns = await api.workflows.list(); } catch {}
+    try { dbRuns = await api.workflows.list(); } catch { }
     const dbMap = new Map(dbRuns.map((r: any) => [r.id, r]));
 
     // 3. Merge: prefer local data for state loading; show both sources
@@ -110,27 +108,27 @@ export function WorkflowHistory() {
 
     for (const id of allIds) {
       const loc = localMap.get(id);
-      const db  = dbMap.get(id);
+      const db = dbMap.get(id);
       const source: MergedEntry["source"] = loc && db ? "both" : loc ? "local" : "db";
 
       merged.push({
         id,
         source,
-        status:            db?.status ?? "Completed",
-        time_ago:          timeAgo(loc?.timestamp ?? db?.started_at ?? null),
-        timestamp:         loc?.timestamp ?? db?.started_at ?? "",
-        business_goal:     loc?.business_goal    || db?.business_goal    || "",
-        top_recommendation:loc?.top_recommendation || db?.top_recommendation || "",
-        risk_level:        db?.risk_level         || "",
-        confidence:        loc?.confidence        ?? db?.confidence        ?? 0,
-        trust_score:       loc?.trust_score       ?? db?.trust_score       ?? 0,
-        estimated_roi:     loc?.estimated_roi     ?? db?.estimated_roi     ?? 0,
+        status: db?.status ?? "Completed",
+        time_ago: timeAgo(loc?.timestamp ?? db?.started_at ?? null),
+        timestamp: loc?.timestamp ?? db?.started_at ?? "",
+        business_goal: loc?.business_goal || db?.business_goal || "",
+        top_recommendation: loc?.top_recommendation || db?.top_recommendation || "",
+        risk_level: db?.risk_level || "",
+        confidence: loc?.confidence ?? db?.confidence ?? 0,
+        trust_score: loc?.trust_score ?? db?.trust_score ?? 0,
+        estimated_roi: loc?.estimated_roi ?? db?.estimated_roi ?? 0,
         selected_strategy: loc?.selected_strategy ?? db?.selected_strategy ?? "",
-        agents_completed:  loc?.agents_completed  ?? db?.agents_completed  ?? 0,
-        transcript_preview:loc?.transcript_preview ?? "",
-        workflow_id:       loc?.workflow_id       ?? db?.workflow_id       ?? id,
-        execution_id:      loc?.execution_id      ?? db?.execution_id      ?? "",
-        has_state:         !!loc || (db?.has_payload ?? false),
+        agents_completed: loc?.agents_completed ?? db?.agents_completed ?? 0,
+        transcript_preview: loc?.transcript_preview ?? "",
+        workflow_id: loc?.workflow_id ?? db?.workflow_id ?? id,
+        execution_id: loc?.execution_id ?? db?.execution_id ?? "",
+        has_state: !!loc || (db?.has_payload ?? false),
       });
     }
 
@@ -182,23 +180,24 @@ export function WorkflowHistory() {
       e.selected_strategy.toLowerCase().includes(q);
     const matchSrc = filterSrc === "all" ||
       (filterSrc === "local" && (e.source === "local" || e.source === "both")) ||
-      (filterSrc === "db"    && (e.source === "db"    || e.source === "both"));
+      (filterSrc === "db" && (e.source === "db" || e.source === "both"));
     return matchSearch && matchSrc;
   });
 
   const completedCount = entries.filter(e => e.status.toLowerCase() === "completed").length;
-  const localCount     = entries.filter(e => e.source === "local" || e.source === "both").length;
-  const avgTrust       = entries.length
+  const localCount = entries.filter(e => e.source === "local" || e.source === "both").length;
+  const avgTrust = entries.length
     ? (entries.reduce((s, e) => s + e.trust_score, 0) / entries.length * 100).toFixed(0)
     : "—";
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
+    <div className="max-w-7xl mx-auto space-y-6 animate-in slide-up duration-300">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <PageHeader
           title="Workflow History"
           description="Every workflow run is persisted locally and in the database. Click any run to reopen the full analysis."
+          badge="Run History"
         />
         <div className="flex items-center gap-2 mt-1 shrink-0">
           {confirmClear ? (
@@ -230,12 +229,12 @@ export function WorkflowHistory() {
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Runs",      value: entries.length.toString(),  icon: <Database size={16} />,    color: "text-primary"        },
-          { label: "Completed",       value: completedCount.toString(),  icon: <CheckCircle2 size={16} />, color: "text-status-success" },
-          { label: "Stored Locally",  value: localCount.toString(),      icon: <HardDrive size={16} />,   color: "text-violet-600"     },
-          { label: "Avg Trust Score", value: `${avgTrust}%`,             icon: <ShieldCheck size={16} />, color: "text-blue-600"       },
+          { label: "Total Runs", value: entries.length.toString(), icon: <Database size={16} />, color: "text-primary" },
+          { label: "Completed", value: completedCount.toString(), icon: <CheckCircle2 size={16} />, color: "text-status-success" },
+          { label: "Stored Locally", value: localCount.toString(), icon: <HardDrive size={16} />, color: "text-violet-600" },
+          { label: "Avg Trust Score", value: `${avgTrust}%`, icon: <ShieldCheck size={16} />, color: "text-blue-600" },
         ].map(({ label, value, icon, color }) => (
-          <div key={label} className="bg-card border border-border rounded-xl p-4 shadow-sm">
+          <div key={label} className="bg-card border border-border rounded-2xl p-4 shadow-card hover:shadow-card-md transition-all duration-200">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-muted-foreground">{label}</span>
               <span className={color}>{icon}</span>
@@ -261,16 +260,15 @@ export function WorkflowHistory() {
             placeholder="Search by goal, recommendation, strategy, or ID..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-full pl-9 pr-4 py-2.5 text-sm border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all"
           />
         </div>
         <div className="flex items-center gap-2">
           <Filter size={14} className="text-muted-foreground" />
           {(["all", "local", "db"] as const).map(f => (
             <button key={f} onClick={() => setFilterSrc(f)}
-              className={`px-3 py-2 text-xs rounded-lg border font-medium transition-colors capitalize ${
-                filterSrc === f ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:bg-secondary"
-              }`}>
+              className={`px-3 py-2 text-xs rounded-lg border font-medium transition-colors capitalize ${filterSrc === f ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:bg-secondary"
+                }`}>
               {f === "all" ? "All" : f === "local" ? "Local" : "Database"}
             </button>
           ))}
@@ -298,9 +296,8 @@ export function WorkflowHistory() {
               <div
                 key={entry.id}
                 onClick={() => openRun(entry)}
-                className={`bg-card border border-border rounded-xl p-5 shadow-sm transition-all group ${
-                  entry.has_state ? "hover:border-primary/40 hover:shadow-md cursor-pointer" : "opacity-55 cursor-not-allowed"
-                }`}
+                className={`bg-card border border-border rounded-2xl p-5 shadow-card transition-all duration-200 group ${entry.has_state ? "hover:border-primary/30 hover:shadow-card-md hover:-translate-y-0.5 cursor-pointer" : "opacity-55 cursor-not-allowed"
+                  }`}
               >
                 <div className="flex items-start justify-between gap-4">
                   {/* Left */}
@@ -393,3 +390,4 @@ export function WorkflowHistory() {
     </div>
   );
 }
+

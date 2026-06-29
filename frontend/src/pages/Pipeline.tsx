@@ -1,10 +1,10 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   LayoutTemplate, Search, BrainCircuit, Route, ShieldCheck,
   Handshake, Sparkles, Play, ZoomIn, ZoomOut, Maximize2,
-  X, ChevronDown, ChevronUp, Activity, Cpu, Database,
-  ArrowRight, CheckCircle2, Clock, Settings, RotateCcw
+  X, Activity, Cpu,
+  ArrowRight, Clock, RotateCcw
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -41,14 +41,14 @@ const INITIAL_NODES: AgentNode[] = [
   {
     id: "context", label: "Context Intelligence", sublabel: "Extraction Layer",
     icon: <LayoutTemplate size={16} />, accent: "#10b981", bg: "#f0fdf4",
-    position: { x: 60,  y: 220 }, status: "idle", provider: "groq", enabled: true,
+    position: { x: 60, y: 220 }, status: "idle", provider: "groq", enabled: true,
     description: "Parses raw customer interactions. Extracts stakeholders, pain points, intent, buying stage, and business goals using LLM reasoning.",
     inputs: ["transcript"], outputs: ["context_artifact"],
   },
   {
     id: "knowledge", label: "Knowledge Intelligence", sublabel: "Retrieval Layer",
     icon: <Search size={16} />, accent: "#0ea5e9", bg: "#f0f9ff",
-    position: { x: 320, y: 80  }, status: "idle", provider: "groq", enabled: true,
+    position: { x: 320, y: 80 }, status: "idle", provider: "groq", enabled: true,
     description: "Hybrid vector + keyword search across the enterprise knowledge base. Retrieves playbooks, SOPs, and historical cases as grounded evidence.",
     inputs: ["context_artifact"], outputs: ["knowledge_artifact"],
   },
@@ -62,7 +62,7 @@ const INITIAL_NODES: AgentNode[] = [
   {
     id: "strategy", label: "Strategy Intelligence", sublabel: "Planning Layer",
     icon: <Route size={16} />, accent: "#8b5cf6", bg: "#faf5ff",
-    position: { x: 840, y: 80  }, status: "idle", provider: "groq", enabled: true,
+    position: { x: 840, y: 80 }, status: "idle", provider: "groq", enabled: true,
     description: "3-scenario simulation engine (optimistic / realistic / conservative). Selects optimal path and generates phased roadmap with ROI projections.",
     inputs: ["decision_artifact"], outputs: ["strategy_artifact"],
   },
@@ -90,19 +90,19 @@ const INITIAL_NODES: AgentNode[] = [
 ];
 
 const EDGES: Edge[] = [
-  { from: "context",    to: "knowledge"  },
-  { from: "context",    to: "decision"   },
-  { from: "knowledge",  to: "decision"   },
-  { from: "decision",   to: "strategy"   },
-  { from: "strategy",   to: "reflection" },
-  { from: "knowledge",  to: "reflection" },
-  { from: "decision",   to: "reflection" },
-  { from: "reflection", to: "approval"   },
-  { from: "approval",   to: "learning"   },
+  { from: "context", to: "knowledge" },
+  { from: "context", to: "decision" },
+  { from: "knowledge", to: "decision" },
+  { from: "decision", to: "strategy" },
+  { from: "strategy", to: "reflection" },
+  { from: "knowledge", to: "reflection" },
+  { from: "decision", to: "reflection" },
+  { from: "reflection", to: "approval" },
+  { from: "approval", to: "learning" },
 ];
 
 // Execution order for simulation
-const EXEC_ORDER = ["context","knowledge","decision","strategy","reflection","approval","learning"];
+const EXEC_ORDER = ["context", "knowledge", "decision", "strategy", "reflection", "approval", "learning"];
 const EXEC_LATENCIES = [820, 1240, 1680, 1950, 760, 0, 540]; // ms per agent (0 = manual)
 
 // ── SVG helpers ───────────────────────────────────────────────────────────────
@@ -117,11 +117,11 @@ function edgePath(from: Pt, to: Pt): string {
 
 // ── Status helpers ────────────────────────────────────────────────────────────
 const STATUS_DOT: Record<NodeStatus, { bg: string; pulse: boolean; label: string }> = {
-  idle:    { bg: "#cbd5e1", pulse: false, label: "Idle"    },
-  queued:  { bg: "#fbbf24", pulse: true,  label: "Queued"  },
-  running: { bg: "#f59e0b", pulse: true,  label: "Running" },
-  done:    { bg: "#22c55e", pulse: false, label: "Done"    },
-  error:   { bg: "#ef4444", pulse: false, label: "Error"   },
+  idle: { bg: "#cbd5e1", pulse: false, label: "Idle" },
+  queued: { bg: "#fbbf24", pulse: true, label: "Queued" },
+  running: { bg: "#f59e0b", pulse: true, label: "Running" },
+  done: { bg: "#22c55e", pulse: false, label: "Done" },
+  error: { bg: "#ef4444", pulse: false, label: "Error" },
 };
 
 function StatusPill({ status }: { status: NodeStatus }) {
@@ -149,10 +149,7 @@ interface NodeCardProps {
 
 function NodeCard({ node, selected, onPointerDown, onSelect }: NodeCardProps) {
   const borderCol = selected ? node.accent : "#e2e8f0";
-  const shadowStr = selected
-    ? `0 0 0 2px ${node.accent}40, 0 4px 20px ${node.accent}25`
-    : "0 2px 8px rgba(0,0,0,0.08)";
-  const opacity   = node.enabled ? 1 : 0.45;
+  const opacity = node.enabled ? 1 : 0.45;
 
   return (
     <g
@@ -349,8 +346,8 @@ function ConfigPanel({
 
 // ── Stats sidebar ─────────────────────────────────────────────────────────────
 function StatsSidebar({ nodes, simulating }: { nodes: AgentNode[]; simulating: boolean }) {
-  const done    = nodes.filter(n => n.status === "done").length;
-  const total   = nodes.length;
+  const done = nodes.filter(n => n.status === "done").length;
+  const total = nodes.length;
   const enabled = nodes.filter(n => n.enabled).length;
   const avgConf = nodes.filter(n => n.confidence != null)
     .reduce((s, n) => s + (n.confidence ?? 0), 0) / Math.max(1, nodes.filter(n => n.confidence != null).length);
@@ -415,16 +412,16 @@ function StatsSidebar({ nodes, simulating }: { nodes: AgentNode[]; simulating: b
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export function Pipeline() {
-  const navigate  = useNavigate();
-  const svgRef    = useRef<SVGSVGElement>(null);
-  const wrapRef   = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const svgRef = useRef<SVGSVGElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
 
-  const [nodes,      setNodes]      = useState<AgentNode[]>(INITIAL_NODES);
-  const [selected,   setSelected]   = useState<string | null>(null);
-  const [dragging,   setDragging]   = useState<{ id: string; sm: Pt; sp: Pt } | null>(null);
-  const [vb,         setVb]         = useState({ x: -60, y: -30, w: 1400, h: 560 });
-  const [panning,    setPanning]    = useState(false);
-  const [panStart,   setPanStart]   = useState<Pt>({ x: 0, y: 0 });
+  const [nodes, setNodes] = useState<AgentNode[]>(INITIAL_NODES);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [dragging, setDragging] = useState<{ id: string; sm: Pt; sp: Pt } | null>(null);
+  const [vb, setVb] = useState({ x: -60, y: -30, w: 1400, h: 560 });
+  const [panning, setPanning] = useState(false);
+  const [panStart, setPanStart] = useState<Pt>({ x: 0, y: 0 });
   const [simulating, setSimulating] = useState(false);
 
   const selectedNode = nodes.find(n => n.id === selected) ?? null;
@@ -444,13 +441,13 @@ export function Pipeline() {
     const r = svgRef.current?.getBoundingClientRect();
     if (!r) return { x: cx, y: cy };
     return {
-      x: (cx - r.left) * (vb.w / r.width)  + vb.x,
-      y: (cy - r.top)  * (vb.h / r.height) + vb.y,
+      x: (cx - r.left) * (vb.w / r.width) + vb.x,
+      y: (cy - r.top) * (vb.h / r.height) + vb.y,
     };
   }, [vb]);
 
   const onPM = useCallback((e: React.PointerEvent) => {
-    const W = wrapRef.current?.offsetWidth  ?? 1;
+    const W = wrapRef.current?.offsetWidth ?? 1;
     const H = wrapRef.current?.offsetHeight ?? 1;
     if (dragging) {
       const dx = (e.clientX - dragging.sm.x) * (vb.w / W);
@@ -500,11 +497,11 @@ export function Pipeline() {
     // reset
     setNodes(p => p.map(n => ({ ...n, status: "idle", latencyMs: undefined, confidence: undefined, tokenCount: undefined })));
     setSimulating(true);
-    const confs   = [0.94, 0.87, 0.91, 0.88, 0.96, 0, 0.83];
-    const tokens  = [1240, 890, 2180, 2640, 980, 0, 620];
+    const confs = [0.94, 0.87, 0.91, 0.88, 0.96, 0, 0.83];
+    const tokens = [1240, 890, 2180, 2640, 980, 0, 620];
     for (let i = 0; i < EXEC_ORDER.length; i++) {
-      const id  = EXEC_ORDER[i];
-      const ms  = EXEC_LATENCIES[i];
+      const id = EXEC_ORDER[i];
+      const ms = EXEC_LATENCIES[i];
       if (!nodes.find(n => n.id === id)?.enabled) continue;
       if (ms === 0) {
         setNodes(p => p.map(n => n.id === id ? { ...n, status: "queued" } : n));
@@ -620,9 +617,9 @@ export function Pipeline() {
                 const tn = nodes.find(n => n.id === edge.to);
                 if (!fn || !tn) return null;
                 const disabled = !fn.enabled || !tn.enabled;
-                const active   = fn.status === "running" || fn.status === "done";
+                const active = fn.status === "running" || fn.status === "done";
                 const from = nodeCenter(fn);
-                const to   = nodeCenter(tn);
+                const to = nodeCenter(tn);
                 return (
                   <path
                     key={`${edge.from}-${edge.to}`}

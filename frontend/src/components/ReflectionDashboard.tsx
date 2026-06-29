@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ReflectionArtifact } from "../types/agent";
-import { CheckCircle2, XCircle, AlertTriangle, Info, ChevronRight } from "lucide-react";
+import { CheckCircle2, XCircle, ChevronRight } from "lucide-react";
 
 interface ReflectionDashboardProps {
   reflectionArtifact: ReflectionArtifact;
@@ -12,7 +12,7 @@ const CIRC = 251.2;
 function ScoreRing({ value, color, label, sublabel }: { value: number; color: string; label: string; sublabel: string }) {
   const offset = CIRC - CIRC * Math.min(value, 1);
   return (
-    <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col items-center text-center gap-2">
+    <div className="bg-card border border-border rounded-2xl p-4 shadow-card flex flex-col items-center text-center gap-2">
       <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</span>
       <div className="relative flex items-center justify-center my-1">
         <svg className="w-24 h-24 -rotate-90">
@@ -39,15 +39,15 @@ export default function ReflectionDashboard({ reflectionArtifact, apiBaseUrl }: 
     fetch(`${apiBaseUrl}/api/v1/reflection/report/${workflow_id}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => setReportData(d))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoadingReport(false));
   }, [workflow_id, apiBaseUrl]);
 
   const tabs = [
-    { id: "audit" as const,       label: "Explainability"    },
-    { id: "findings" as const,    label: `Findings (${payload.critical_findings.length + payload.warnings.length + payload.unsupported_claims.length})` },
+    { id: "audit" as const, label: "Explainability" },
+    { id: "findings" as const, label: `Findings (${payload.critical_findings.length + payload.warnings.length + payload.unsupported_claims.length})` },
     { id: "suggestions" as const, label: `Suggestions (${payload.improvement_suggestions.length})` },
-    { id: "report" as const,      label: "Report Preview" },
+    { id: "report" as const, label: "Report Preview" },
   ];
 
   return (
@@ -67,14 +67,14 @@ export default function ReflectionDashboard({ reflectionArtifact, apiBaseUrl }: 
 
       {/* Score rings */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <ScoreRing value={payload.overall_trust_score}      color="#10b981" label="Trust Score"        sublabel="7-parameter validation" />
-        <ScoreRing value={payload.governance_score}         color="#3b82f6" label="Governance"         sublabel="Audit & compliance" />
-        <ScoreRing value={payload.explainability_score}     color="#8b5cf6" label="Explainability"     sublabel="Rationale completeness" />
-        <div className="bg-card border border-border rounded-xl p-4 shadow-sm space-y-3 flex flex-col justify-center">
+        <ScoreRing value={payload.overall_trust_score} color="#10b981" label="Trust Score" sublabel="7-parameter validation" />
+        <ScoreRing value={payload.governance_score} color="#3b82f6" label="Governance" sublabel="Audit & compliance" />
+        <ScoreRing value={payload.explainability_score} color="#8b5cf6" label="Explainability" sublabel="Rationale completeness" />
+        <div className="bg-card border border-border rounded-2xl p-4 shadow-card space-y-3 flex flex-col justify-center">
           {[
-            { label: "Evidence Coverage",      v: payload.evidence_coverage,           color: "bg-emerald-500" },
-            { label: "Strategy Consistency",   v: payload.strategy_consistency_score,  color: "bg-sky-500"     },
-            { label: "Hallucination Risk",     v: payload.hallucination_risk,           color: payload.hallucination_risk > 0.4 ? "bg-rose-500" : "bg-amber-400", invert: true },
+            { label: "Evidence Coverage", v: payload.evidence_coverage, color: "bg-emerald-500" },
+            { label: "Strategy Consistency", v: payload.strategy_consistency_score, color: "bg-sky-500" },
+            { label: "Hallucination Risk", v: payload.hallucination_risk, color: payload.hallucination_risk > 0.4 ? "bg-rose-500" : "bg-amber-400", invert: true },
           ].map(({ label, v, color, invert }) => (
             <div key={label}>
               <div className="flex justify-between text-xs text-muted-foreground mb-1">
@@ -90,7 +90,7 @@ export default function ReflectionDashboard({ reflectionArtifact, apiBaseUrl }: 
       </div>
 
       {/* Verdict + detail tabs */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-card">
         <div className="px-5 py-4 border-b border-border bg-secondary/20">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Audit Verdict</p>
           <p className="text-sm text-foreground font-medium">{payload.audit_summary}</p>
@@ -100,9 +100,8 @@ export default function ReflectionDashboard({ reflectionArtifact, apiBaseUrl }: 
         <div className="flex border-b border-border overflow-x-auto">
           {tabs.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
-                tab === t.id ? "border-primary text-primary bg-background" : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}>
+              className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${tab === t.id ? "border-primary text-primary bg-background" : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}>
               {t.label}
             </button>
           ))}
@@ -113,10 +112,10 @@ export default function ReflectionDashboard({ reflectionArtifact, apiBaseUrl }: 
           {tab === "audit" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               {[
-                { label: "Analysis Summary",           val: payload.execution_metadata.explainability_summary },
-                { label: "Why This Strategy",          val: payload.execution_metadata.why_selected },
-                { label: "Alternatives Rejected",      val: payload.execution_metadata.why_alternatives_rejected },
-                { label: "Evidence Influence",         val: payload.execution_metadata.evidence_influence },
+                { label: "Analysis Summary", val: payload.execution_metadata.explainability_summary },
+                { label: "Why This Strategy", val: payload.execution_metadata.why_selected },
+                { label: "Alternatives Rejected", val: payload.execution_metadata.why_alternatives_rejected },
+                { label: "Evidence Influence", val: payload.execution_metadata.evidence_influence },
               ].map(({ label, val }) => (
                 <div key={label} className="bg-secondary/30 border border-border rounded-lg p-3 space-y-1">
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">{label}</p>
@@ -207,3 +206,5 @@ export default function ReflectionDashboard({ reflectionArtifact, apiBaseUrl }: 
     </div>
   );
 }
+
+

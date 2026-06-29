@@ -28,7 +28,7 @@ export function Analytics() {
   const formatMs = (ms: number) => ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in slide-up duration-300">
       <PageHeader
         title="Analytics"
         description="Pipeline performance, agent health, and execution quality metrics."
@@ -71,7 +71,7 @@ export function Analytics() {
       {/* Agent performance table */}
       <section>
         <h2 className="text-base font-semibold text-foreground mb-3">Agent Performance</h2>
-        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-card border border-border rounded-2xl shadow-card overflow-hidden">
           {isLoading ? (
             <div className="flex items-center justify-center py-16 text-muted-foreground">
               <Loader2 className="animate-spin mr-2" size={18} />
@@ -139,7 +139,7 @@ export function Analytics() {
       {/* Workflow event log */}
       <section>
         <h2 className="text-base font-semibold text-foreground mb-3">Recent Workflow Activity</h2>
-        <div className="bg-card border border-border rounded-xl shadow-sm divide-y divide-border">
+        <div className="bg-card border border-border rounded-2xl shadow-card divide-y divide-border">
           {isLoading ? (
             <div className="flex items-center justify-center py-12 text-muted-foreground">
               <Loader2 className="animate-spin mr-2" size={18} />
@@ -174,3 +174,7 @@ export function Analytics() {
     </div>
   );
 }
+
+
+
+
