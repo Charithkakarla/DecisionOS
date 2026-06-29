@@ -104,62 +104,7 @@ function MetricsRow({ ws }: { ws: WorkflowState }) {
     );
 }
 
-function WorkflowSnapshot({ ws }: { ws: WorkflowState }) {
-    const d = ws.decision_artifact?.payload;
-    const s = ws.strategy_artifact?.payload;
-    const r = ws.reflection_artifact?.payload;
-    const a = ws.approval_artifact?.payload;
-    const done = [ws.context_artifact, ws.knowledge_artifact, ws.decision_artifact, ws.strategy_artifact, ws.reflection_artifact, ws.approval_artifact, ws.learning_artifact].filter(Boolean).length;
-    const pct = Math.round((done / 7) * 100);
-    const readiness = d?.analysis?.decision_readiness ?? d?.business_scores?.decision_readiness ?? 0;
-    const confidence = r?.overall_confidence ?? d?.confidence?.overall_confidence ?? a?.approval_confidence ?? 0;
-    const risk = d?.analysis?.risk_score ?? d?.business_scores?.risk_score ?? 0;
-    const roi = s?.estimated_roi ?? 0;
-    const words = ws.transcript?.trim().split(/\s+/).length ?? 0;
-    return (
-        <aside className="xl:sticky xl:top-4 xl:self-start">
-            <div className="bg-card border border-border rounded-md p-5 shadow-card space-y-4">
-                <div className="flex items-center justify-between">
-                    <p className="text-[9px] font-bold tracking-[0.18em] text-muted-foreground uppercase">Workflow Snapshot</p>
-                    <span className="text-xs font-semibold text-primary bg-primary/8 border border-primary/15 px-2 py-0.5 rounded">{pct}%</span>
-                </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    {([
-                        { label: "Readiness", value: fmt(readiness), color: "bg-status-success" },
-                        { label: "Confidence", value: fmt(confidence), color: "bg-primary" },
-                        { label: "Risk", value: fmt(risk), color: "bg-status-error" },
-                        { label: "ROI", value: roi ? `${roi.toFixed(1)}%` : "—", color: "bg-status-warning" }
-                    ] as const).map(m => (
-                        <div key={m.label}>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{m.label}</p>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                                <span className={`w-2 h-2 rounded-sm shrink-0 ${m.color}`} />
-                                <p className="text-sm font-bold text-foreground">{m.value}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                <div className="space-y-1.5">
-                    {([
-                        { label: "Workflow ID", value: ws.workflow_id ?? "latest" },
-                        { label: "Execution ID", value: ws.execution_id ?? "pending" },
-                        { label: "Transcript", value: `${words.toLocaleString()} words` },
-                        { label: "Stages complete", value: `${done}/7` }
-                    ] as const).map(row => (
-                        <div key={row.label} className="flex items-center justify-between gap-2">
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">{row.label}</span>
-                            <span className="text-[11px] font-semibold text-foreground truncate text-right max-w-[130px]">{row.value}</span>
-                        </div>
-                    ))}
-                </div>
-                <div className="h-1.5 bg-secondary rounded overflow-hidden">
-                    <motion.div className="h-full rounded bg-primary"
-                        initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.9, ease: "easeOut" }} />
-                </div>
-            </div>
-        </aside>
-    );
-}
+
 
 function ContextPanel({ artifact }: { artifact: WorkflowState["context_artifact"] }) {
     if (!artifact?.payload) return <EmptyTab label="Context" />;
@@ -283,8 +228,8 @@ export function WorkflowDetails() {
                     ) : (
                         <AnimatePresence mode="wait">
                             <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18, ease: "easeOut" }}
-                                className="grid gap-6 p-6 xl:grid-cols-[minmax(0,2fr)_300px] xl:items-start">
-                                <div className="space-y-5 min-w-0">
+                                className="p-6">
+                                <div className="space-y-5">
                                     {activeTab === "context" && (ws.context_artifact ? <ContextPanel artifact={ws.context_artifact} /> : <EmptyTab label="Context" />)}
                                     {activeTab === "readiness" && <DecisionReadiness workflowState={ws} />}
                                     {activeTab === "knowledge" && (
@@ -333,7 +278,6 @@ export function WorkflowDetails() {
                                     {activeTab === "learning" && (ws.learning_artifact ? <LearningDashboard workflowState={ws} /> : <EmptyTab label="Learning" />)}
                                     {activeTab === "report" && <ExecutiveReport workflowState={ws} />}
                                 </div>
-                                <WorkflowSnapshot ws={ws} />
                             </motion.div>
                         </AnimatePresence>
                     )}
