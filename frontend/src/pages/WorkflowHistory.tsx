@@ -131,25 +131,31 @@ export function WorkflowHistory() {
       const db = dbMap.get(id);
       const source: MergedEntry["source"] = loc && db ? "both" : loc ? "local" : "db";
 
-      merged.push({
-        id,
-        source,
-        status: db?.status ?? "Completed",
-        time_ago: timeAgo(loc?.timestamp ?? db?.started_at ?? null),
-        timestamp: loc?.timestamp ?? db?.started_at ?? "",
-        business_goal: loc?.business_goal || db?.business_goal || "",
-        top_recommendation: loc?.top_recommendation || db?.top_recommendation || "",
-        risk_level: db?.risk_level || "",
-        confidence: loc?.confidence ?? db?.confidence ?? 0,
-        trust_score: loc?.trust_score ?? db?.trust_score ?? 0,
-        estimated_roi: loc?.estimated_roi ?? db?.estimated_roi ?? 0,
-        selected_strategy: loc?.selected_strategy ?? db?.selected_strategy ?? "",
-        agents_completed: loc?.agents_completed ?? db?.agents_completed ?? 0,
-        transcript_preview: loc?.transcript_preview ?? "",
-        workflow_id: loc?.workflow_id ?? db?.workflow_id ?? id,
-        execution_id: loc?.execution_id ?? db?.execution_id ?? "",
-        has_state: !!loc || (db?.has_payload ?? false),
-      });
+      const goal = loc?.business_goal || db?.business_goal || "";
+      const preview = loc?.transcript_preview || "";
+      const agents = loc?.agents_completed ?? db?.agents_completed ?? 0;
+
+      // Filter: only include rows if they have a business goal, a preview transcript, or at least 1 agent completed!
+      if (goal || preview || agents > 0) {
+        merged.push({
+          id,
+          source,
+          status: db?.status ?? "Completed",
+          time_ago: timeAgo(loc?.timestamp ?? db?.started_at ?? null),
+          timestamp: loc?.timestamp ?? db?.started_at ?? "",
+          business_goal: goal,
+          top_recommendation: loc?.top_recommendation || db?.top_recommendation || "",
+          risk_level: db?.risk_level || "",
+          confidence: loc?.confidence ?? db?.confidence ?? 0,
+          trust_score: loc?.trust_score ?? db?.trust_score ?? 0,
+          estimated_roi: loc?.estimated_roi ?? db?.estimated_roi ?? 0,
+          selected_strategy: loc?.selected_strategy ?? db?.selected_strategy ?? "",
+          agents_completed: agents,
+          transcript_preview: preview,
+          workflow_id: loc?.workflow_id ?? db?.workflow_id ?? id,
+          has_state: !!loc || (db?.has_payload ?? false),
+        });
+      }
     }
 
     // Sort newest first

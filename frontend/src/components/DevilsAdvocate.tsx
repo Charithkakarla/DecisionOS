@@ -131,83 +131,91 @@ function CritiqueCard({ critique }: { critique: Critique }) {
       </button>
 
       {expanded && (
-        <div className="px-5 pb-5 space-y-4 border-t border-slate-100">
-          {/* Counter Arguments */}
-          <div className="pt-4">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle size={13} className="text-rose-500" />
-              <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">Why This Could Fail</p>
-            </div>
-            <ul className="space-y-1.5">
-              {critique.counterArguments.map((arg, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-slate-600">
-                  <span className="text-rose-400 font-bold shrink-0 mt-0.5">•</span>
-                  {arg}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Weak Evidence */}
-            <div className="bg-rose-50 border border-rose-100 rounded-lg p-3">
+        <div className="px-5 pb-5 pt-4 border-t border-slate-100 grid grid-cols-1 lg:grid-cols-12 gap-5 bg-slate-50/20">
+          
+          {/* Left Panel: Challenges & Evidence (7 columns) */}
+          <div className="lg:col-span-7 space-y-4">
+            {/* Why This Could Fail */}
+            <div>
               <div className="flex items-center gap-1.5 mb-2">
-                <TrendingDown size={12} className="text-rose-500" />
-                <p className="text-[10px] font-bold text-rose-700 uppercase tracking-wide">Weak Evidence</p>
+                <AlertTriangle size={13} className="text-rose-500" />
+                <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">Key Challenges</span>
               </div>
-              <ul className="space-y-1">
-                {critique.weakEvidence.map((e, i) => (
-                  <li key={i} className="text-xs text-rose-700">{e}</li>
+              <ul className="space-y-1.5 pl-1">
+                {critique.counterArguments.map((arg, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs text-slate-600 leading-relaxed">
+                    <span className="text-rose-500 font-bold shrink-0 mt-0.5">•</span>
+                    {arg}
+                  </li>
                 ))}
               </ul>
             </div>
 
-            {/* Strong Evidence */}
-            <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Lightbulb size={12} className="text-emerald-600" />
-                <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">Supporting Evidence</p>
+            {/* Evidence Evaluation - Simple side-by-side capsules */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="bg-rose-50/50 border border-rose-100/60 rounded-xl p-3">
+                <p className="text-[10px] font-bold text-rose-800 uppercase tracking-wider mb-1.5">Weak Evidence</p>
+                <div className="space-y-1.5">
+                  {critique.weakEvidence.map((e, i) => (
+                    <p key={i} className="text-xs text-rose-700 leading-normal">• {e}</p>
+                  ))}
+                </div>
               </div>
-              <ul className="space-y-1">
-                {critique.strongEvidence.map((e, i) => (
-                  <li key={i} className="text-xs text-emerald-700">{e}</li>
-                ))}
-              </ul>
+
+              <div className="bg-emerald-50/50 border border-emerald-100/60 rounded-xl p-3">
+                <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider mb-1.5">Supporting Evidence</p>
+                <div className="space-y-1.5">
+                  {critique.strongEvidence.map((e, i) => (
+                    <p key={i} className="text-xs text-emerald-700 leading-normal">• {e}</p>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Assumptions */}
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <HelpCircle size={13} className="text-amber-500" />
-              <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">Assumptions Being Made</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {critique.assumptions.map((a, i) => (
-                <span key={i} className="text-[11px] bg-amber-50 border border-amber-200 text-amber-700 px-2 py-1 rounded-full">
-                  {a}
+          {/* Right Panel: Adaptive Pathway & Impact (5 columns) */}
+          <div className="lg:col-span-5 bg-slate-50 border border-slate-200/60 rounded-xl p-4 space-y-3.5">
+            {/* Confidence Impact */}
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Confidence Impact</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${
+                  critique.confidenceImpact.toLowerCase().includes("high") 
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-700" 
+                    : critique.confidenceImpact.toLowerCase().includes("moderate")
+                      ? "bg-amber-50 border-amber-200 text-amber-700"
+                      : "bg-rose-50 border-rose-200 text-rose-700"
+                }`}>
+                  {critique.confidenceImpact.split(" — ")[0] || "Assessment"}
                 </span>
-              ))}
+                <span className="text-xs text-slate-500 truncate">
+                  {critique.confidenceImpact.split(" — ")[1] || critique.confidenceImpact}
+                </span>
+              </div>
+            </div>
+
+            {/* Alternative Pathway */}
+            <div className="border-t border-slate-200/60 pt-3">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Alternative Path</p>
+              <p className="text-xs text-slate-800 font-bold mt-1">🔀 {critique.alternative}</p>
+              <p className="text-[11px] text-slate-500 mt-1 leading-normal">
+                <strong className="text-slate-600 font-bold">Trigger:</strong> {critique.whenAlternativeWins}
+              </p>
+            </div>
+
+            {/* Assumptions */}
+            <div className="border-t border-slate-200/60 pt-3">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Assumptions Made</p>
+              <div className="flex flex-wrap gap-1.5">
+                {critique.assumptions.map((a, i) => (
+                  <span key={i} className="text-[10px] bg-white border border-slate-200 text-slate-600 px-2 py-0.5 rounded-md font-medium shadow-sm leading-normal">
+                    {a}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Alternative + When it wins */}
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
-            <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Alternative Path</p>
-              <p className="text-xs text-slate-700 font-semibold mt-0.5">{critique.alternative}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">When Alternative Wins</p>
-              <p className="text-xs text-slate-600 mt-0.5">{critique.whenAlternativeWins}</p>
-            </div>
-          </div>
-
-          {/* Confidence impact */}
-          <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2.5">
-            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wide mb-1">Confidence Impact Assessment</p>
-            <p className="text-xs text-blue-800">{critique.confidenceImpact}</p>
-          </div>
         </div>
       )}
     </div>
