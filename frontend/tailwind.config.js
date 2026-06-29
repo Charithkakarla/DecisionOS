@@ -64,7 +64,7 @@ export default {
         "card": "0 1px 2px 0 rgb(0 0 0 / 0.06), 0 1px 3px 0 rgb(0 0 0 / 0.04)",
         "card-md": "0 2px 6px -1px rgb(0 0 0 / 0.08), 0 1px 4px -2px rgb(0 0 0 / 0.05)",
         "card-lg": "0 8px 16px -4px rgb(0 0 0 / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.05)",
-        "glow": "0 0 0 3px hsl(213 94% 28% / 0.18)",
+        "glow": "0 0 0 3px hsl(84 35% 24% / 0.18)",
       },
       keyframes: {
         "accordion-down": {

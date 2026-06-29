@@ -161,28 +161,6 @@ function WorkflowSnapshot({ ws }: { ws: WorkflowState }) {
     );
 }
 
-<<<<<<< HEAD
-const TABS = [
-  { id: "context_knowledge",     label: "Context & Knowledge",       icon: <Cpu size={14} />,          group: "pipeline" },
-  { id: "decision_intelligence", label: "Decision Intelligence",     icon: <BrainCircuit size={14} />, group: "pipeline" },
-  { id: "strategy_governance",   label: "Strategy & Governance",     icon: <Target size={14} />,       group: "pipeline" },
-  { id: "review_learning",       label: "Review & Learning",         icon: <Zap size={14} />,          group: "pipeline" },
-] as const;
-
-type TabId = typeof TABS[number]["id"];
-
-// ── Main component ────────────────────────────────────────────────────────────
-
-export function WorkflowDetails() {
-  const { id }      = useParams();
-  const navigate    = useNavigate();
-  const location    = useLocation();
-  const [activeTab, setActiveTab] = useState<TabId>("context_knowledge");
-  const [approvalCompleted, setApprovalCompleted] = useState(false);
-  const [knowledgeSearchQuery, setKnowledgeSearchQuery] = useState("");
-  const [isKnowledgeSearching, setIsKnowledgeSearching] = useState(false);
-  const [knowledgeSearchResults, setKnowledgeSearchResults] = useState<any>(null);
-=======
 function ContextPanel({ artifact }: { artifact: WorkflowState["context_artifact"] }) {
     if (!artifact?.payload) return <EmptyTab label="Context" />;
     const p = artifact.payload as Record<string, any>;
@@ -231,12 +209,11 @@ export function WorkflowDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const { activeTab, setActiveTab, setHasPendingApproval } = useWorkflowTab();
+    const { activeTab, setActiveTab, setAgentStatus, setHasPendingApproval } = useWorkflowTab();
     const [approvalCompleted, setApprovalCompleted] = useState(false);
     const [knowledgeQuery, setKnowledgeQuery] = useState("");
     const [knowledgeLoading, setKnowledgeLoading] = useState(false);
     const [knowledgeResults, setKnowledgeResults] = useState<any>(null);
->>>>>>> 975ded8 (dashboard changes)
 
     const ws: WorkflowState | null = location.state?.initialData ?? null;
     const pendingApproval = !!(ws?.approval_artifact?.payload) &&
@@ -244,17 +221,20 @@ export function WorkflowDetails() {
 
     useEffect(() => {
         setHasPendingApproval(pendingApproval);
+        if (ws) {
+            setAgentStatus({
+                context: !!ws.context_artifact,
+                knowledge: !!ws.knowledge_artifact,
+                decision: !!ws.decision_artifact,
+                strategy: !!ws.strategy_artifact,
+                reflection: !!ws.reflection_artifact,
+                approval: !!ws.approval_artifact,
+                learning: !!ws.learning_artifact,
+            });
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ws, approvalCompleted]);
 
-<<<<<<< HEAD
-  const agentStatus: Record<string, boolean> = {
-    context_knowledge:     !!workflowState?.context_artifact || !!workflowState?.knowledge_artifact,
-    decision_intelligence: !!workflowState?.decision_artifact,
-    strategy_governance:   !!workflowState?.strategy_artifact || !!workflowState?.reflection_artifact || !!workflowState?.approval_artifact,
-    review_learning:       !!workflowState?.learning_artifact,
-  };
-=======
     const handleSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key !== "Enter" || !knowledgeQuery.trim()) return;
         setKnowledgeLoading(true);
@@ -262,298 +242,9 @@ export function WorkflowDetails() {
         catch { alert("Search failed."); }
         finally { setKnowledgeLoading(false); }
     };
->>>>>>> 975ded8 (dashboard changes)
 
     const tab = TAB_META[activeTab];
 
-<<<<<<< HEAD
-  return (
-    <div className="w-full flex flex-col h-[calc(100vh-4rem)] animate-in fade-in duration-500">
-      {/* ── Page header ──────────────────────────────────────────────────────── */}
-      <div className="mb-4 flex-shrink-0">
-        <button
-          onClick={() => navigate("/workflows")}
-          className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors mb-3 font-medium"
-        >
-          <ArrowLeft size={14} className="mr-1" /> Back to Workflows
-        </button>
-
-        <div className="flex items-start justify-between gap-4">
-          <PageHeader
-            title="Workflow Inspection"
-            description={`ID: ${id} — Full multi-agent reasoning chain, decision intelligence, and governance portal.`}
-          />
-          <button
-            onClick={() => navigate("/workflows")}
-            className="shrink-0 flex items-center gap-2 px-5 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-colors shadow-sm text-sm"
-          >
-            <PlayCircle size={15} />
-            New Run
-          </button>
-        </div>
-
-        {workflowState && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {Object.entries(agentStatus).map(([agent, done]) => (
-              <span key={agent} className={`text-xs px-2.5 py-1 rounded-full font-medium border ${
-                done
-                  ? "bg-status-success-bg border-status-success/25 text-status-success"
-                  : "bg-secondary border-border text-muted-foreground"
-              }`}>
-                {done ? "✓" : "○"} {TABS.find(t => t.id === agent)?.label || agent}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* ── Main card ────────────────────────────────────────────────────────── */}
-      <div className="bg-card border border-border rounded-xl flex flex-col flex-1 overflow-hidden shadow-md">
-
-        {/* Tab bar */}
-        <div className="flex border-b border-border overflow-x-auto bg-secondary/20 flex-shrink-0">
-          {/* Group separator labels */}
-          {TABS.map((tab, i) => {
-            const prevGroup = i > 0 ? TABS[i - 1].group : null;
-            const showSep   = prevGroup && prevGroup !== tab.group;
-            const isActive  = activeTab === tab.id;
-            const hasStatusDot = tab.id in agentStatus;
-
-            return (
-              <div key={tab.id} className="flex items-center">
-                {showSep && <div className="w-px h-6 bg-border mx-1 self-center" />}
-                <button
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex items-center gap-1.5 px-4 py-3.5 border-b-2 text-xs font-medium transition-colors whitespace-nowrap ${
-                    isActive
-                      ? "border-primary text-primary bg-background"
-                      : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40"
-                  }`}
-                >
-                  {tab.icon}
-                  <span>{tab.label}</span>
-
-                  {/* Agent status dot */}
-                  {hasStatusDot && (
-                    <span className={`w-1.5 h-1.5 rounded-full ${
-                      agentStatus[tab.id] ? "bg-status-success" : "bg-muted-foreground/30"
-                    }`} />
-                  )}
-
-                  {/* Pending approval pulse */}
-                  {tab.id === "strategy_governance" && hasPendingApproval && (
-                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-status-warning animate-pulse" />
-                  )}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* ── Tab content ──────────────────────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto">
-          {!workflowState ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8">
-              <Workflow size={52} className="mb-4 opacity-20" />
-              <p className="text-base font-medium mb-1">No workflow data</p>
-              <p className="text-sm text-center max-w-sm">
-                Run a workflow from the Sales Intelligence Hub and click "Open Full Analysis" to inspect results here.
-              </p>
-              <button
-                onClick={() => navigate("/workflows")}
-                className="mt-5 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-              >
-                Go to Pipeline
-              </button>
-            </div>
-          ) : (
-            <div className="p-6">
-
-              {activeTab === "context_knowledge" && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                  {/* Left Column: Context */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold border-b border-border pb-2">Business Context</h3>
-                    {workflowState.context_artifact ? (
-                      <ContextPanel artifact={workflowState.context_artifact} />
-                    ) : (
-                      <EmptyTab label="Context" />
-                    )}
-                  </div>
-
-                  {/* Right Column: Readiness and Knowledge */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold border-b border-border pb-2">Intelligence & Readiness</h3>
-                    {workflowState ? (
-                      <DecisionReadiness workflowState={workflowState} />
-                    ) : null}
-                    
-                    {/* Semantic Search Box */}
-                    <div className="bg-card border border-border rounded-xl p-5 shadow-sm space-y-4">
-                      <div>
-                        <h3 className="text-sm font-semibold text-foreground">Interactive Semantic Search</h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">Query the organization's vector base for real-time playbooks or documentation matches.</p>
-                      </div>
-                      
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                        <input 
-                          type="text" 
-                          value={knowledgeSearchQuery}
-                          onChange={(e) => setKnowledgeSearchQuery(e.target.value)}
-                          onKeyDown={handleKnowledgeSearch}
-                          placeholder="Ask a question or search playbooks..." 
-                          className="w-full bg-background border border-border rounded-lg py-2 pl-10 pr-4 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                        />
-                      </div>
-
-                      {/* Search Results */}
-                      {isKnowledgeSearching ? (
-                        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground text-xs">
-                          <Loader2 className="animate-spin mb-2" size={24} />
-                          <p>Searching semantic embeddings...</p>
-                        </div>
-                      ) : knowledgeSearchResults ? (
-                        <div className="space-y-3 mt-2 border-t border-border/50 pt-4">
-                          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Search Results ({knowledgeSearchResults.knowledge_results?.length ?? 0})</h4>
-                          {knowledgeSearchResults.knowledge_results?.map((item: any, i: number) => (
-                            <div key={i} className="p-3.5 rounded-lg border border-border bg-secondary/30 text-xs space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className="font-semibold text-primary">{item.document_name}</span>
-                                <span className="text-[10px] text-muted-foreground bg-secondary px-2 py-0.5 rounded">Match: {(item.similarity_score * 100).toFixed(0)}%</span>
-                              </div>
-                              <p className="text-foreground leading-relaxed font-mono bg-card border border-border/40 p-2.5 rounded whitespace-pre-wrap">{item.content}</p>
-                            </div>
-                          ))}
-                          {(!knowledgeSearchResults.knowledge_results || knowledgeSearchResults.knowledge_results.length === 0) && (
-                            <p className="text-center text-muted-foreground text-xs py-4">No matching playbooks or documents found.</p>
-                          )}
-                        </div>
-                      ) : null}
-                    </div>
-
-                    {/* Original Run Results */}
-                    <div className="bg-card border border-border rounded-xl p-5 shadow-sm space-y-4">
-                      <div>
-                        <h3 className="text-sm font-semibold text-foreground">Pipeline Retrieval Evidence</h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">The exact context chunks collected by the agent during the automated run.</p>
-                      </div>
-
-                      {workflowState.knowledge_artifact?.payload
-                        ? (
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <p className="text-xs text-muted-foreground">
-                                {workflowState.knowledge_artifact.payload.knowledge_results.length} evidence chunks retrieved
-                                · confidence <strong>{(workflowState.knowledge_artifact.payload.confidence_score * 100).toFixed(0)}%</strong>
-                              </p>
-                            </div>
-                            {workflowState.knowledge_artifact.payload.knowledge_results.length === 0
-                              ? <p className="text-sm text-muted-foreground py-8 text-center">No knowledge retrieved for this workflow. Upload playbooks to the Knowledge Base to improve results.</p>
-                              : workflowState.knowledge_artifact.payload.knowledge_results.map((r: any) => (
-                                <div key={r.id} className="bg-secondary/20 border border-border/80 rounded-xl p-4">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{r.citation}</span>
-                                    <span className="text-xs font-bold text-foreground">{(r.similarity_score * 100).toFixed(0)}% match</span>
-                                  </div>
-                                  <p className="text-xs text-foreground leading-relaxed font-mono bg-background p-3 rounded-lg border border-border whitespace-pre-wrap">{r.content}</p>
-                                </div>
-                              ))
-                            }
-                          </div>
-                        )
-                        : <EmptyTab label="Knowledge" />
-                      }
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "decision_intelligence" && (
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-                  {/* Left (Main): Decision */}
-                  <div className="xl:col-span-2 space-y-6">
-                    <h3 className="text-lg font-semibold border-b border-border pb-2">Primary Decision Engine</h3>
-                    {workflowState.decision_artifact?.payload ? (
-                      <DecisionDashboard decisionPackage={workflowState.decision_artifact.payload} />
-                    ) : (
-                      <EmptyTab label="Decision" />
-                    )}
-                  </div>
-
-                  {/* Right: Devil's Advocate & What-If */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold border-b border-border pb-2">Risk & Alternatives</h3>
-                    {workflowState.decision_artifact?.payload ? (
-                      <div className="space-y-6">
-                        <DevilsAdvocate decisionPackage={workflowState.decision_artifact.payload} />
-                        <WhatIfSimulator decisionPackage={workflowState.decision_artifact.payload} />
-                      </div>
-                    ) : (
-                      <EmptyTab label="Decision (required for analysis)" />
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "strategy_governance" && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                  {/* Left: Strategy */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold border-b border-border pb-2">Execution Strategy</h3>
-                    {workflowState.strategy_artifact?.payload ? (
-                      <StrategyDashboard strategyPackage={workflowState.strategy_artifact.payload} />
-                    ) : (
-                      <EmptyTab label="Strategy" />
-                    )}
-                  </div>
-
-                  {/* Right: Reflection & Approval */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold border-b border-border pb-2">Governance & Review</h3>
-                    
-                    {workflowState.reflection_artifact ? (
-                      <ReflectionDashboard
-                        reflectionArtifact={workflowState.reflection_artifact}
-                        apiBaseUrl={API_BASE_URL}
-                      />
-                    ) : (
-                      <EmptyTab label="Reflection" />
-                    )}
-
-                    {workflowState.approval_artifact ? (
-                      <ApprovalDashboard
-                        workflowState={workflowState}
-                        apiBaseUrl={API_BASE_URL}
-                        onApprovalComplete={() => setApprovalCompleted(true)}
-                      />
-                    ) : (
-                      <EmptyTab label="Approval" />
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "review_learning" && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                  {/* Left: Report */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold border-b border-border pb-2">Executive Report</h3>
-                    <ExecutiveReport workflowState={workflowState} />
-                  </div>
-
-                  {/* Right: Learning */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold border-b border-border pb-2">Agent Learning</h3>
-                    {workflowState.learning_artifact ? (
-                      <LearningDashboard workflowState={workflowState} />
-                    ) : (
-                      <EmptyTab label="Learning" />
-                    )}
-                  </div>
-                </div>
-              )}
-=======
     return (
         <div className="w-full flex flex-col gap-5 min-h-[calc(100vh-4rem)] animate-in fade-in duration-300">
             <div className="flex flex-col gap-3 flex-shrink-0">
@@ -571,7 +262,6 @@ export function WorkflowDetails() {
                         </button>
                     </div>
                 </div>
->>>>>>> 975ded8 (dashboard changes)
             </div>
 
             <div className="bg-card border border-border rounded-md flex flex-col flex-1 overflow-hidden shadow-card min-h-0">

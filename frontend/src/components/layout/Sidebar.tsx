@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Workflow, History, BookOpen,
-  GitBranch, BarChart2, FileText, Settings, User, Zap,
+  GitBranch, BarChart2, FileText, Settings, User, Layers,
 } from "lucide-react";
 
 const NAV = [
@@ -33,7 +33,7 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
       {/* Logo */}
       <div className="flex h-[65px] items-center border-b border-border shrink-0 px-3 gap-3">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-primary text-primary-foreground cursor-pointer select-none">
-          <Zap size={15} strokeWidth={2.5} />
+          <Layers size={15} strokeWidth={2.5} />
         </div>
         <AnimatePresence initial={false}>
           {!collapsed && (

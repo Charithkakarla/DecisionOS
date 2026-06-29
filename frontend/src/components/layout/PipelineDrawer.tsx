@@ -11,20 +11,19 @@ const TABS: {
     id: TabId;
     label: string;
     icon: React.ReactNode;
-    badge?: "new";
     agentKey?: string;
 }[] = [
         { id: "context", label: "Context", icon: <Cpu size={15} />, agentKey: "context" },
-        { id: "readiness", label: "Readiness", icon: <GaugeCircle size={15} />, badge: "new" },
+        { id: "readiness", label: "Readiness", icon: <GaugeCircle size={15} /> },
         { id: "knowledge", label: "Knowledge", icon: <Database size={15} />, agentKey: "knowledge" },
         { id: "decision", label: "Decision", icon: <BrainCircuit size={15} />, agentKey: "decision" },
-        { id: "advocate", label: "Devil's Advocate", icon: <ShieldAlert size={15} />, badge: "new" },
-        { id: "simulator", label: "What-If", icon: <Sliders size={15} />, badge: "new" },
+        { id: "advocate", label: "Devil's Advocate", icon: <ShieldAlert size={15} /> },
+        { id: "simulator", label: "What-If", icon: <Sliders size={15} /> },
         { id: "strategy", label: "Strategy", icon: <Target size={15} />, agentKey: "strategy" },
         { id: "reflection", label: "Reflection", icon: <GitMerge size={15} />, agentKey: "reflection" },
         { id: "approval", label: "Approval", icon: <Settings2 size={15} />, agentKey: "approval" },
         { id: "learning", label: "Learning", icon: <Sparkles size={15} />, agentKey: "learning" },
-        { id: "report", label: "Report", icon: <FileText size={15} />, badge: "new" },
+        { id: "report", label: "Report", icon: <FileText size={15} /> },
     ];
 
 export function PipelineDrawer() {
@@ -98,12 +97,6 @@ export function PipelineDrawer() {
 
                                 {/* Badges + status dots */}
                                 <span className="flex items-center gap-1.5 shrink-0">
-                                    {tab.badge === "new" && (
-                                        <span className={`text-[8px] font-bold px-1.5 py-[2px] rounded-full uppercase tracking-wide leading-none ${isActive ? "bg-primary/20 text-primary" : "bg-status-success text-white"
-                                            }`}>
-                                            NEW
-                                        </span>
-                                    )}
 
                                     {tab.agentKey && (
                                         <motion.span

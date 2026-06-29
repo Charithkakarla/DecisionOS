@@ -26,16 +26,6 @@ const PIPELINE_STAGES = [
   { id: "learning", label: "Learning", color: "bg-green-700", desc: "Updates organizational memory" },
 ];
 
-const PLATFORM_FEATURES = [
-  "Planner-orchestrated agents",
-  "Hybrid vector + BM25 retrieval",
-  "Explainable recommendations",
-  "3-scenario strategy simulation",
-  "Hallucination detection",
-  "Human-in-the-loop governance",
-  "Organizational memory & learning",
-  "Multi-provider LLM support",
-];
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -234,36 +224,6 @@ export function Dashboard() {
         </section>
       </motion.div>
 
-      {/* Platform Capabilities */}
-      <motion.section variants={stagger.item}>
-        <div className="bg-card border border-border rounded-md p-6">
-          <div className="flex flex-wrap items-start justify-between gap-6">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded bg-primary/8 text-primary">
-                  <TrendingUp size={15} />
-                </div>
-                <h3 className="text-sm font-bold text-foreground">Platform Capabilities</h3>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-y-2 gap-x-4">
-                {PLATFORM_FEATURES.map((feat) => (
-                  <div key={feat} className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <CheckCircle2 size={11} className="text-status-success shrink-0" />
-                    <span>{feat}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <button
-              onClick={() => navigate("/workflows")}
-              className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary/90 transition-colors"
-            >
-              Try the Platform
-              <ArrowRight size={14} />
-            </button>
-          </div>
-        </div>
-      </motion.section>
 
       {/* Measurable Outcomes */}
       {metrics && (metrics.total_workflows > 0 || metrics.knowledge_documents > 0) && (
