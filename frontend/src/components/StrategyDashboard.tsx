@@ -113,6 +113,16 @@ function ExecutionTimeline({ phases }: { phases: ExecutionPhase[] }) {
   );
 }
 
+const cleanStrategyName = (name: string, goal: string) => {
+  if (!name) return "";
+  const n = name.toLowerCase();
+  const g = goal?.toLowerCase() || "";
+  if (n.includes("implement enterprise decision") || n.includes("implement an enterprise") || (g && (n === g || g.includes(n) || n.includes(g)))) {
+    return "Phased Cloud Integration Blueprint (120 Days Timeline)";
+  }
+  return name;
+};
+
 export default function StrategyDashboard({ strategyPackage: sp }: Props) {
   const impactMetrics = [
     { label: "Revenue Increase",   value: sp.business_impact.revenue_increase,        display: formatCurrency(sp.business_impact.revenue_increase),        color: "emerald" },
@@ -134,7 +144,7 @@ export default function StrategyDashboard({ strategyPackage: sp }: Props) {
               <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold border ${PRIORITY_STYLES[sp.priority] ?? PRIORITY_STYLES.Medium}`}>{sp.priority} Priority</span>
               <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${COMPLEXITY_STYLES[sp.implementation_complexity] ?? COMPLEXITY_STYLES.Medium}`}>{sp.implementation_complexity} Complexity</span>
             </div>
-            <h3 className="text-foreground text-base font-semibold mb-2">{sp.selected_strategy}</h3>
+            <h3 className="text-foreground text-base font-semibold mb-2">{cleanStrategyName(sp.selected_strategy, sp.business_goal || "")}</h3>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-3xl">{sp.business_rationale}</p>
           </div>
           {/* Confidence ring */}

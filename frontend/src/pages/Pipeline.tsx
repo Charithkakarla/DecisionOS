@@ -240,103 +240,93 @@ function ConfigPanel({
   node, onClose, onUpdate,
 }: { node: AgentNode; onClose: () => void; onUpdate: (id: string, p: Partial<AgentNode>) => void }) {
   return (
-    <div className="absolute right-0 top-0 h-full w-72 bg-white border-l border-slate-200 shadow-2xl z-30 flex flex-col">
+    <div className="absolute right-0 top-0 h-full w-72 bg-white border-l border-slate-200 shadow-xl z-30 flex flex-col animate-in slide-in-from-right duration-200">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100"
-        style={{ borderTop: `3px solid ${node.accent}` }}>
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: node.bg, color: node.accent }}>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold" style={{ background: node.bg, color: node.accent }}>
             {node.icon}
           </div>
           <div>
             <p className="text-xs font-bold text-slate-800">{node.label}</p>
-            <p className="text-[10px] text-slate-400">{node.sublabel}</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">{node.sublabel}</p>
           </div>
         </div>
-        <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded hover:bg-slate-100">
+        <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-50">
           <X size={14} />
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-5 space-y-5 text-xs">
         {/* Status */}
-        <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
-          <span className="text-xs text-slate-500 font-medium">Status</span>
+        <div className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5">
+          <span className="text-slate-500 font-medium">Agent Status</span>
           <StatusPill status={node.status} />
         </div>
 
         {/* Description */}
-        <div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Description</p>
-          <p className="text-xs text-slate-600 leading-relaxed">{node.description}</p>
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Functional Role</p>
+          <p className="text-slate-600 leading-relaxed font-medium">{node.description}</p>
         </div>
 
-        {/* Provider */}
-        <div>
-          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">LLM Provider</label>
-          <select
-            value={node.provider}
-            onChange={(e) => onUpdate(node.id, { provider: e.target.value })}
-            className="w-full text-xs bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700 outline-none focus:border-slate-400 transition-colors"
-          >
-            {PROVIDERS.map((p) => (
-              <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Enable toggle */}
-        <div className="flex items-center justify-between">
+        {/* Configuration Row */}
+        <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
           <div>
-            <p className="text-xs font-semibold text-slate-700">Agent Enabled</p>
-            <p className="text-[10px] text-slate-400">Disable to skip in pipeline</p>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Model Engine</label>
+            <select
+              value={node.provider}
+              onChange={(e) => onUpdate(node.id, { provider: e.target.value })}
+              className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-lg px-2.5 py-1.5 text-slate-700 outline-none transition-colors font-medium"
+            >
+              {PROVIDERS.map((p) => (
+                <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+              ))}
+            </select>
           </div>
-          <button
-            onClick={() => onUpdate(node.id, { enabled: !node.enabled })}
-            className={`relative w-10 h-5 rounded-full transition-colors ${node.enabled ? "bg-emerald-500" : "bg-slate-200"}`}
-          >
-            <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${node.enabled ? "translate-x-5" : "translate-x-0.5"}`} />
-          </button>
-        </div>
 
-        {/* I/O chips */}
-        <div className="grid grid-cols-2 gap-3">
-          {[{ label: "Inputs", items: node.inputs }, { label: "Outputs", items: node.outputs }].map(({ label, items }) => (
-            <div key={label}>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">{label}</p>
-              <div className="space-y-1">
-                {items.map((item) => (
-                  <div key={item} className="text-[10px] bg-slate-50 border border-slate-200 rounded px-2 py-1 font-mono text-slate-600 truncate">
-                    {item}
-                  </div>
-                ))}
-              </div>
+          <div className="flex flex-col justify-between">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Execution State</p>
+            <div className="flex items-center justify-between h-[30px]">
+              <span className="text-[11px] text-slate-600 font-medium">{node.enabled ? "Active" : "Bypassed"}</span>
+              <button
+                onClick={() => onUpdate(node.id, { enabled: !node.enabled })}
+                className={`relative w-8 h-4 rounded-full transition-colors ${node.enabled ? "bg-primary" : "bg-slate-200"}`}
+              >
+                <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${node.enabled ? "translate-x-4.5" : "translate-x-0.5"}`} />
+              </button>
             </div>
-          ))}
+          </div>
         </div>
 
-        {/* Metrics (when done) */}
+        {/* Simple Flow Row */}
+        <div className="border-t border-slate-100 pt-4 space-y-2">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Data Lifecycle</p>
+          <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-3 flex items-center justify-between font-mono text-[9px] text-slate-600">
+            <span className="truncate max-w-[100px]" title={node.inputs.join(", ")}>{node.inputs[0] || "None"}</span>
+            <ArrowRight size={10} className="text-slate-400 mx-1 shrink-0" />
+            <span className="truncate max-w-[100px] text-right text-primary font-semibold" title={node.outputs.join(", ")}>{node.outputs[0] || "None"}</span>
+          </div>
+        </div>
+
+        {/* Simple Metrics (when done) */}
         {node.status === "done" && (
-          <div className="bg-slate-50 rounded-lg p-3 space-y-2">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Last Run Metrics</p>
-            {node.latencyMs != null && (
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500">Latency</span>
-                <span className="font-mono font-bold text-slate-700">{node.latencyMs}ms</span>
-              </div>
-            )}
-            {node.confidence != null && (
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500">Confidence</span>
-                <span className="font-mono font-bold text-slate-700">{(node.confidence * 100).toFixed(0)}%</span>
-              </div>
-            )}
-            {node.tokenCount != null && (
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500">Tokens</span>
-                <span className="font-mono font-bold text-slate-700">{node.tokenCount.toLocaleString()}</span>
-              </div>
-            )}
+          <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-3.5 space-y-2 border-t mt-4">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Execution Metrics</p>
+            <div className="grid grid-cols-2 gap-3 text-[11px]">
+              {node.latencyMs != null && (
+                <div>
+                  <span className="text-slate-400 block text-[9px] uppercase font-bold">Latency</span>
+                  <span className="font-semibold text-slate-700">{node.latencyMs}ms</span>
+                </div>
+              )}
+              {node.confidence != null && (
+                <div>
+                  <span className="text-slate-400 block text-[9px] uppercase font-bold">Confidence</span>
+                  <span className="font-semibold text-slate-700">{(node.confidence * 100).toFixed(0)}%</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -423,6 +413,7 @@ export function Pipeline() {
   const [panning, setPanning] = useState(false);
   const [panStart, setPanStart] = useState<Pt>({ x: 0, y: 0 });
   const [simulating, setSimulating] = useState(false);
+  const [simLogs, setSimLogs] = useState<string[]>([]);
 
   const selectedNode = nodes.find(n => n.id === selected) ?? null;
   const updateNode = useCallback((id: string, patch: Partial<AgentNode>) => {
@@ -494,23 +485,62 @@ export function Pipeline() {
   // ── Simulation run ────────────────────────────────────────────────────────
   const runSimulation = async () => {
     if (simulating) return;
-    // reset
     setNodes(p => p.map(n => ({ ...n, status: "idle", latencyMs: undefined, confidence: undefined, tokenCount: undefined })));
+    setSimLogs([]);
     setSimulating(true);
-    const confs = [0.94, 0.87, 0.91, 0.88, 0.96, 0, 0.83];
+
+    const logTemplates = {
+      context: [
+        "⚡ [Context Agent] Ingesting customer interactions...",
+        "⚙️ [Context Agent] Extracting intent and B2B pain points...",
+        "✓ [Context Agent] Goal parsed: 'Enterprise SaaS seat scale-up'"
+      ],
+      knowledge: [
+        "⚡ [Knowledge Agent] Querying playbooks and historical files...",
+        "🔍 [Knowledge Agent] Found 3 matching documents (Similarity > 85%)",
+        "✓ [Knowledge Agent] Grounded context retrieved successfully"
+      ],
+      decision: [
+        "⚡ [Decision Agent] Formulating next best actions...",
+        "⚖️ [Decision Agent] Running risk-opportunity analytics...",
+        "✓ [Decision Agent] Generated 3 recommendations (Primary: 'Seat scale-up')"
+      ],
+      strategy: [
+        "⚡ [Strategy Agent] Simulating 3 roadmaps (Aggressive/Conservative)...",
+        "📊 [Strategy Agent] Estimated ROI: 7.1x, Timeline: 90 days",
+        "✓ [Strategy Agent] Optimal path chosen: Aggressive Expansion"
+      ],
+      reflection: [
+        "⚡ [AI Governance] Scanning for hallucinations...",
+        "🛡️ [AI Governance] Verifying citations against retrieved evidence...",
+        "✓ [AI Governance] Audited. Factual check passed (Trust score: 96%)"
+      ],
+      approval: [
+        "⚡ [Human-in-the-Loop] Awaiting reviewer review...",
+        "✓ [Human-in-the-Loop] Approved by Sarah Jenkins (VP, Sales Operations)"
+      ],
+      learning: [
+        "⚡ [Learning Agent] Indexing logs to memory store...",
+        "✓ [Learning Agent] Pipeline optimized. Memory storage update complete."
+      ]
+    };
+
+    const confs = [0.94, 0.87, 0.91, 0.88, 0.96, 1.0, 0.83];
     const tokens = [1240, 890, 2180, 2640, 980, 0, 620];
+
     for (let i = 0; i < EXEC_ORDER.length; i++) {
       const id = EXEC_ORDER[i];
-      const ms = EXEC_LATENCIES[i];
+      const ms = EXEC_LATENCIES[i] || 600;
       if (!nodes.find(n => n.id === id)?.enabled) continue;
-      if (ms === 0) {
-        setNodes(p => p.map(n => n.id === id ? { ...n, status: "queued" } : n));
-        await new Promise(r => setTimeout(r, 600));
-        setNodes(p => p.map(n => n.id === id ? { ...n, status: "done", latencyMs: 0, confidence: confs[i], tokenCount: 0 } : n));
-        continue;
-      }
+
       setNodes(p => p.map(n => n.id === id ? { ...n, status: "running" } : n));
-      await new Promise(r => setTimeout(r, ms));
+
+      const templates = logTemplates[id as keyof typeof logTemplates] || [];
+      for (const t of templates) {
+        setSimLogs(p => [...p, t]);
+        await new Promise(r => setTimeout(r, ms / templates.length));
+      }
+
       setNodes(p => p.map(n => n.id === id
         ? { ...n, status: "done", latencyMs: ms + Math.round(Math.random() * 80 - 40), confidence: confs[i], tokenCount: tokens[i] }
         : n));
@@ -520,6 +550,7 @@ export function Pipeline() {
 
   const resetSim = () => {
     setNodes(p => p.map(n => ({ ...n, status: "idle", latencyMs: undefined, confidence: undefined, tokenCount: undefined })));
+    setSimLogs([]);
     setSimulating(false);
   };
 
@@ -617,20 +648,27 @@ export function Pipeline() {
                 const tn = nodes.find(n => n.id === edge.to);
                 if (!fn || !tn) return null;
                 const disabled = !fn.enabled || !tn.enabled;
-                const active = fn.status === "running" || fn.status === "done";
+                const active = fn.status === "running" || (fn.status === "done" && tn.status === "running");
                 const from = nodeCenter(fn);
                 const to = nodeCenter(tn);
+                const pathD = edgePath(from, to);
                 return (
-                  <path
-                    key={`${edge.from}-${edge.to}`}
-                    d={edgePath(from, to)}
-                    fill="none"
-                    stroke={disabled ? "#e2e8f0" : edgeAccent(edge.from)}
-                    strokeWidth={active && !disabled ? 2 : 1.5}
-                    strokeOpacity={disabled ? 0.4 : active ? 0.75 : 0.35}
-                    strokeDasharray={disabled ? "6 4" : undefined}
-                    markerEnd={disabled ? undefined : `url(#arrow-${edge.from})`}
-                  />
+                  <g key={`${edge.from}-${edge.to}`}>
+                    <path
+                      d={pathD}
+                      fill="none"
+                      stroke={disabled ? "#e2e8f0" : edgeAccent(edge.from)}
+                      strokeWidth={active && !disabled ? 2.5 : 1.5}
+                      strokeOpacity={disabled ? 0.3 : active ? 0.85 : 0.35}
+                      strokeDasharray={disabled ? "6 4" : undefined}
+                      markerEnd={disabled ? undefined : `url(#arrow-${edge.from})`}
+                    />
+                    {active && !disabled && (
+                      <circle r="4.5" fill={edgeAccent(edge.from)} className="filter drop-shadow-[0_0_3px_rgba(0,0,0,0.4)]">
+                        <animateMotion dur="1.2s" repeatCount="indefinite" path={pathD} />
+                      </circle>
+                    )}
+                  </g>
                 );
               })}
 
@@ -646,6 +684,25 @@ export function Pipeline() {
               ))}
             </svg>
           </div>
+
+          {/* Live agent logs console */}
+          {simulating && (
+            <div className="absolute bottom-16 right-3 z-20 w-80 bg-slate-900/95 text-slate-200 border border-slate-700/50 rounded-lg p-3.5 shadow-xl font-mono text-[10px] space-y-1.5 backdrop-blur max-h-48 overflow-y-auto animate-in slide-up duration-300">
+              <div className="flex items-center justify-between border-b border-slate-850 pb-1.5 mb-1.5">
+                <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                  <Activity size={10} className="animate-pulse" /> LIVE PLANNER EXECUTION CONSOLE
+                </span>
+                <span className="text-slate-500">v1.0</span>
+              </div>
+              <div className="space-y-1">
+                {simLogs.map((log, idx) => (
+                  <div key={idx} className="leading-relaxed">
+                    {log}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Config panel */}
           {selectedNode && (

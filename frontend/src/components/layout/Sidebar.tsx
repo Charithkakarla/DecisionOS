@@ -51,6 +51,23 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
         </AnimatePresence>
       </div>
 
+      {/* Search Shortcut Bar */}
+      {!collapsed && (
+        <div className="px-3 py-2 mt-2 shrink-0">
+          <div
+            onClick={() => {
+              // Dispatch Ctrl+K keydown to trigger global listener
+              const e = new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true });
+              window.dispatchEvent(e);
+            }}
+            className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 border border-slate-150 hover:border-slate-200 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-400 font-bold cursor-pointer select-none transition-colors shadow-sm"
+          >
+            <span>Search actions...</span>
+            <span className="bg-white border border-slate-200 px-1.5 py-0.2 rounded font-mono text-[9px] font-black text-slate-500 shadow-sm">Ctrl+K</span>
+          </div>
+        </div>
+      )}
+
       {/* Main nav */}
       <nav className="flex-1 flex flex-col py-3 gap-0.5 overflow-y-auto px-2">
         {NAV.map((item, i) => (

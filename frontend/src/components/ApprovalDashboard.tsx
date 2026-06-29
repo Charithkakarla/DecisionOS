@@ -428,9 +428,8 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {escalationSignals.map((sig, i) => (
               <div key={i} className="flex items-center gap-2 bg-card border border-border rounded-lg p-2.5 text-xs">
-                <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
-                  sig.severity === "high" ? "bg-status-error-bg text-status-error" : "bg-status-warning-bg text-status-warning"
-                }`}>
+                <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${sig.severity === "high" ? "bg-status-error-bg text-status-error" : "bg-status-warning-bg text-status-warning"
+                  }`}>
                   {sig.severity}
                 </span>
                 <span className="text-foreground">{sig.description}</span>
@@ -495,15 +494,14 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
           {/* Action tabs */}
           <div className="flex border-b border-border text-xs mb-4">
             {([
-              { key: "approve" as const,  label: "Approve",  color: "emerald" },
-              { key: "modify" as const,   label: "Modify",   color: "yellow"  },
-              { key: "escalate" as const, label: "Escalate", color: "purple"  },
-              { key: "reject" as const,   label: "Reject",   color: "rose"    },
+              { key: "approve" as const, label: "Approve", color: "emerald" },
+              { key: "modify" as const, label: "Modify", color: "yellow" },
+              { key: "escalate" as const, label: "Escalate", color: "purple" },
+              { key: "reject" as const, label: "Reject", color: "rose" },
             ]).map(tab => (
               <button key={tab.key} onClick={() => setActiveAction(tab.key)}
-                className={`px-4 py-2.5 border-b-2 font-bold transition ${
-                  activeAction === tab.key ? `border-${tab.color}-500 text-${tab.color}-600` : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
+                className={`px-4 py-2.5 border-b-2 font-bold transition ${activeAction === tab.key ? `border-${tab.color}-500 text-${tab.color}-600` : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
                 style={activeAction === tab.key ? { borderBottomColor: tab.color === "emerald" ? "#10b981" : tab.color === "yellow" ? "#f59e0b" : tab.color === "purple" ? "#8b5cf6" : "#ef4444", color: tab.color === "emerald" ? "#059669" : tab.color === "yellow" ? "#d97706" : tab.color === "purple" ? "#7c3aed" : "#dc2626" } : {}}>
                 {tab.label}
               </button>
@@ -514,7 +512,7 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
           {activeAction === "approve" && (
             <div className="space-y-4 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
               <div>
-                <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Approval Comments (min 10 characters)</label>
+                <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Approval Comments (min 3 characters)</label>
                 <textarea value={approvalComments} onChange={e => setApprovalComments(e.target.value)}
                   placeholder="Provide detailed justification for approving this strategy..."
                   className="w-full h-20 text-xs bg-white border border-emerald-200 p-2.5 rounded-lg text-foreground outline-none resize-none focus:border-emerald-400" />
@@ -535,7 +533,7 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
                     className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-emerald-600" />
                 </div>
               </div>
-              <button onClick={handleSubmitApproval} disabled={submitting || !reviewer.trim() || approvalComments.length < 10 || !businessOwner.trim()}
+              <button onClick={handleSubmitApproval} disabled={submitting || !reviewer.trim() || approvalComments.length < 3 || !businessOwner.trim()}
                 className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed">
                 {submitting ? "Submitting..." : "Submit Approval"}
               </button>
@@ -546,7 +544,7 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
           {activeAction === "modify" && (
             <div className="space-y-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
               <div>
-                <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Modification Comments (min 10 characters)</label>
+                <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Modification Comments (min 3 characters)</label>
                 <textarea value={approvalComments} onChange={e => setApprovalComments(e.target.value)}
                   placeholder="Describe why modifications are needed..."
                   className="w-full h-20 text-xs bg-white border border-amber-200 p-2.5 rounded-lg text-foreground outline-none resize-none focus:border-amber-400" />
@@ -592,7 +590,7 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
               </div>
 
               <button onClick={handleSubmitModification}
-                disabled={submitting || !reviewer.trim() || approvalComments.length < 10 || !businessOwner.trim() || !modifiedSections.some(s => s.section.trim() && s.after.trim())}
+                disabled={submitting || !reviewer.trim() || approvalComments.length < 3 || !businessOwner.trim() || !modifiedSections.some(s => s.section.trim() && s.after.trim())}
                 className="px-5 py-2.5 bg-yellow-600 hover:bg-yellow-500 text-white text-sm font-semibold rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed">
                 {submitting ? "Submitting Modifications..." : "Submit with Modifications"}
               </button>
@@ -611,7 +609,7 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Escalation Reason (min 10 characters)</label>
+                  <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Escalation Reason (min 3 characters)</label>
                   <input type="text" value={escalationReason} onChange={e => setEscalationReason(e.target.value)}
                     placeholder="Why does this require executive review?"
                     className="w-full text-xs bg-background border border-border p-2.5 rounded-lg text-foreground outline-none focus:border-primary" />
@@ -624,7 +622,7 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
                   className="w-full h-16 text-xs bg-background border border-border p-2.5 rounded-lg text-foreground outline-none resize-none focus:border-primary" />
               </div>
               <button onClick={handleSubmitEscalation}
-                disabled={submitting || !reviewer.trim() || escalationReason.length < 10 || !escalatedTo.trim()}
+                disabled={submitting || !reviewer.trim() || escalationReason.length < 3 || !escalatedTo.trim()}
                 className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed">
                 {submitting ? "Escalating..." : "Escalate to Executive Reviewer"}
               </button>
@@ -635,7 +633,7 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
           {activeAction === "reject" && (
             <div className="space-y-4 bg-rose-50 border border-rose-200 rounded-lg p-4">
               <div>
-                <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Rejection Comments (min 10 characters)</label>
+                <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Rejection Comments (min 3 characters)</label>
                 <textarea value={approvalComments} onChange={e => setApprovalComments(e.target.value)}
                   placeholder="Explain why this strategy is being rejected..."
                   className="w-full h-20 text-xs bg-background border border-border p-2.5 rounded-lg text-foreground outline-none resize-none focus:border-primary" />
@@ -647,7 +645,7 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
                   className="w-full text-xs bg-background border border-border p-2.5 rounded-lg text-foreground outline-none focus:border-primary" />
               </div>
               <button onClick={handleSubmitRejection}
-                disabled={submitting || !reviewer.trim() || approvalComments.length < 10 || !businessOwner.trim()}
+                disabled={submitting || !reviewer.trim() || approvalComments.length < 3 || !businessOwner.trim()}
                 className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed">
                 {submitting ? "Rejecting..." : "Reject Strategy"}
               </button>
@@ -803,9 +801,8 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
                     return (
                       <div key={agent.key} className="flex items-start gap-4">
                         <div className="flex flex-col items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition ${
-                            isComplete ? "border-status-success bg-status-success-bg text-status-success" : "border-border bg-secondary text-muted-foreground"
-                          }`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition ${isComplete ? "border-status-success bg-status-success-bg text-status-success" : "border-border bg-secondary text-muted-foreground"
+                            }`}>
                             {idx + 1}
                           </div>
                           {idx < PIPELINE_AGENTS.length - 1 && (
@@ -815,9 +812,8 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
                         <div className="flex-1 pb-2">
                           <div className="flex justify-between items-center">
                             <span className="text-xs font-semibold text-foreground">{agent.label}</span>
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
-                              isComplete ? "bg-status-success-bg text-status-success border border-status-success/20" : "bg-secondary text-muted-foreground"
-                            }`}>
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${isComplete ? "bg-status-success-bg text-status-success border border-status-success/20" : "bg-secondary text-muted-foreground"
+                              }`}>
                               {isComplete ? "Completed" : "Pending"}
                             </span>
                           </div>
@@ -840,11 +836,10 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
                   {timeline.map((step, idx) => (
                     <div key={idx} className="flex items-start gap-4">
                       <div className="flex flex-col items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition ${
-                          step.status === "completed" ? "border-status-success bg-status-success-bg text-status-success"
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition ${step.status === "completed" ? "border-status-success bg-status-success-bg text-status-success"
                             : step.status === "pending" ? "border-blue-400 bg-blue-50 text-blue-600 animate-pulse"
-                            : "border-border bg-secondary text-muted-foreground"
-                        }`}>
+                              : "border-border bg-secondary text-muted-foreground"
+                          }`}>
                           {step.step + 1}
                         </div>
                         {idx < timeline.length - 1 && (
@@ -854,11 +849,10 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
                       <div className="flex-1 pb-2">
                         <div className="flex justify-between items-center">
                           <span className="text-xs font-semibold text-foreground">{step.label}</span>
-                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
-                            step.status === "completed" ? "bg-status-success-bg text-status-success border border-status-success/20"
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${step.status === "completed" ? "bg-status-success-bg text-status-success border border-status-success/20"
                               : step.status === "pending" ? "bg-blue-50 text-blue-600 border border-blue-200 animate-pulse"
-                              : "bg-secondary text-muted-foreground"
-                          }`}>
+                                : "bg-secondary text-muted-foreground"
+                            }`}>
                             {step.status}
                           </span>
                         </div>
@@ -900,13 +894,12 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
                             {entry.timestamp ? new Date(entry.timestamp).toLocaleString() : "N/A"}
                           </td>
                           <td className="py-2 pr-4">
-                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${
-                              entry.event_type.includes("Granted") || entry.event_type.includes("Completed") ? "bg-status-success-bg text-status-success" :
-                              entry.event_type.includes("Rejected") || entry.event_type.includes("Failed") ? "bg-status-error-bg text-status-error" :
-                              entry.event_type.includes("Escalated") ? "bg-violet-100 text-violet-700" :
-                              entry.event_type.includes("Modified") ? "bg-status-warning-bg text-status-warning" :
-                              "bg-secondary text-muted-foreground"
-                            }`}>
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${entry.event_type.includes("Granted") || entry.event_type.includes("Completed") ? "bg-status-success-bg text-status-success" :
+                                entry.event_type.includes("Rejected") || entry.event_type.includes("Failed") ? "bg-status-error-bg text-status-error" :
+                                  entry.event_type.includes("Escalated") ? "bg-violet-100 text-violet-700" :
+                                    entry.event_type.includes("Modified") ? "bg-status-warning-bg text-status-warning" :
+                                      "bg-secondary text-muted-foreground"
+                              }`}>
                               {entry.event_type}
                             </span>
                           </td>
@@ -931,21 +924,21 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
         <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Approval Observability</h4>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-center">
           {[
-            { label: "Review Time",       value: isDecisionMade ? `${Math.round((Date.now() - reviewStartTime) / 1000)}s` : "Active" },
-            { label: "Reviewer",          value: approvalPayload?.reviewer || reviewer || "Unassigned" },
-            { label: "Final Status",      value: finalStatus, highlight: true },
-            { label: "Escalation Signals",value: String(escalationSignals.length) },
-            { label: "Feedback Items",    value: String(feedbackItems.length + (approvalPayload?.feedback_items?.length ?? 0)) },
-            { label: "Audit Events",      value: String(auditHistory.length) },
+            { label: "Review Time", value: isDecisionMade ? `${Math.round((Date.now() - reviewStartTime) / 1000)}s` : "Active" },
+            { label: "Reviewer", value: approvalPayload?.reviewer || reviewer || "Unassigned" },
+            { label: "Final Status", value: finalStatus, highlight: true },
+            { label: "Escalation Signals", value: String(escalationSignals.length) },
+            { label: "Feedback Items", value: String(feedbackItems.length + (approvalPayload?.feedback_items?.length ?? 0)) },
+            { label: "Audit Events", value: String(auditHistory.length) },
           ].map(({ label, value, highlight }) => (
             <div key={label} className="bg-secondary/40 rounded-lg p-2.5 border border-border">
               <span className="text-[9px] text-muted-foreground block mb-0.5">{label}</span>
               <span className={`text-sm font-bold capitalize ${highlight
                 ? finalStatus === "approved" ? "text-status-success"
                   : finalStatus === "rejected" ? "text-status-error"
-                  : finalStatus === "modified" ? "text-status-warning"
-                  : finalStatus === "escalated" ? "text-violet-600"
-                  : "text-primary"
+                    : finalStatus === "modified" ? "text-status-warning"
+                      : finalStatus === "escalated" ? "text-violet-600"
+                        : "text-primary"
                 : "text-foreground"}`}>
                 {value}
               </span>

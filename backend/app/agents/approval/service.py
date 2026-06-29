@@ -454,7 +454,33 @@ class ApprovalDecisionService:
             },
         )
 
-        # ── 10. Learning queue ────────────────────────────────────────────
+        # ── 10. Run Learning Agent inline and update state ────────────────
+        import json
+        from app.schemas.state import WorkflowState, ApprovalArtifact
+        from app.agents.learning.service import LearningService
+
+        state = WorkflowState.model_validate(state_snapshot)
+        state.approval_artifact = ApprovalArtifact(
+            artifact_id=artifact_id,
+            workflow_id=workflow_id,
+            agent_name="approval",
+            schema_version="1.0.0",
+            created_at=now_iso,
+            provider="ApprovalService",
+            confidence=approval_confidence,
+            payload=payload.model_dump(),
+        )
+
+        if should_queue_for_learning(target_status.value):
+            try:
+                learning_agent = LearningService()
+                state = await learning_agent.execute(state)
+            except Exception as le:
+                logger.error(f"Failed to execute learning agent inline: {le}")
+
+        updated_snapshot = json.loads(state.model_dump_json())
+
+        # ── 11. Learning queue ────────────────────────────────────────────
         learning_queue_id = ""
         if should_queue_for_learning(target_status.value):
             queue_entry = build_learning_queue_entry(
@@ -464,12 +490,12 @@ class ApprovalDecisionService:
                 approval_status=target_status.value,
                 reviewer=reviewer,
                 feedback_record=feedback_record,
-                state_snapshot=state_snapshot,
+                state_snapshot=updated_snapshot,
             )
             learning_queue_id = queue_entry["queue_id"]
             enqueue_learning_record(queue_entry)
 
-        # ── 11. Notifications ─────────────────────────────────────────────
+        # ── 12. Notifications ─────────────────────────────────────────────
         if target_status == ApprovalStatus.ESCALATED and escalated_to:
             await notify_escalation_required(
                 workflow_id=workflow_id,
@@ -492,7 +518,7 @@ class ApprovalDecisionService:
                 ) if feedback_record.get("feedback_items") else "note",
             )
 
-        # ── 12. DB persistence ────────────────────────────────────────────
+        # ── 13. DB persistence ────────────────────────────────────────────
         await self._persist_to_db(
             artifact_id=artifact_id,
             workflow_id=workflow_id,
@@ -501,6 +527,7 @@ class ApprovalDecisionService:
             feedback_record=feedback_record,
             audit_event=audit_event,
             learning_queue_id=learning_queue_id,
+            state_snapshot=updated_snapshot,
         )
 
         elapsed_ms = int((time.time() - start_ts) * 1000)
@@ -527,6 +554,7 @@ class ApprovalDecisionService:
             "escalation_triggers": escalation_eval["triggers"],
             "audit_event_id": audit_event.event_id,
             "payload": payload.model_dump(),
+            "updated_state": state,
         }
 
     async def _persist_to_db(
@@ -538,6 +566,7 @@ class ApprovalDecisionService:
         feedback_record: dict[str, Any],
         audit_event: Any,
         learning_queue_id: str,
+        state_snapshot: dict[str, Any] | None = None,
     ) -> None:
         """Persist all approval records to the database non-blocking."""
         from app.core.database import SessionLocal
@@ -551,6 +580,22 @@ class ApprovalDecisionService:
 
         async with SessionLocal() as session:
             try:
+                # ── Update the WorkflowState payload in DBWorkflowRun ──
+                if state_snapshot:
+                    import datetime
+                    from app.agents.knowledge.repository import DBWorkflowRun
+                    from sqlalchemy import select
+                    
+                    result = await session.execute(select(DBWorkflowRun))
+                    runs = result.scalars().all()
+                    for r in runs:
+                        if r.payload and r.payload.get("workflow_id") == workflow_id:
+                            r.payload = state_snapshot
+                            if payload.approval_status.value in {"approved", "modified", "rejected"}:
+                                r.status = "completed"
+                                r.completed_at = datetime.datetime.utcnow()
+                            break
+
                 await save_approval_request(
                     session=session,
                     artifact_id=artifact_id,

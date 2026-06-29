@@ -4,7 +4,7 @@ import { PageHeader } from "../components/ui/PageHeader";
 import {
   Upload, FileText, ArrowRight, Link2, Mail,
   MessageSquare, CheckCircle2, ChevronRight, Clock, Zap,
-  Sparkles
+  Sparkles, Loader2, X
 } from "lucide-react";
 import { api } from "../lib/api";
 import { AgentProgress } from "../components/workflows/AgentProgress";
@@ -86,6 +86,56 @@ export function Workflows() {
   const [inputText, setInputText] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
   const [workflowState, setWorkflowState] = useState<any>(null);
+  const [connectedSource, setConnectedSource] = useState<string | null>(null);
+  const [syncingSource, setSyncingSource] = useState<string | null>(null);
+  const [authModalSource, setAuthModalSource] = useState<string | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalSuccess, setModalSuccess] = useState(false);
+
+  const handleSourceClick = (label: string) => {
+    if (connectedSource === label) {
+      setConnectedSource(null);
+      setInputText("");
+      return;
+    }
+    
+    setConnectedSource(null);
+    setInputText("");
+    setAuthModalSource(label);
+    setModalLoading(false);
+    setModalSuccess(false);
+  };
+
+  const handleModalAuthSubmit = () => {
+    if (!authModalSource) return;
+    setModalLoading(true);
+    
+    setTimeout(() => {
+      setModalLoading(false);
+      setModalSuccess(true);
+      
+      setTimeout(() => {
+        const source = authModalSource;
+        setAuthModalSource(null);
+        setSyncingSource(source);
+        
+        setTimeout(() => {
+          setSyncingSource(null);
+          setConnectedSource(source);
+          if (source === "CRM Sync") {
+            setInputText(`CRM Note - Lead: MedVitals Healthcare Inc.\nOpportunity Value: $140,000 ARR\nOwner: Jordan Vance\n\nNotes: MedVitals is seeking to migrate their legacy scheduling systems to a cloud solution. Security compliance is critical (HIPAA, SOC-2). They have a timeline limit of 90 days. Budget is fixed at $120,000 for implementation.`);
+          } else if (source === "Email Sync") {
+            setInputText(`From: larry.page@medvitals.com\nTo: AE.team@decisionos.com\nSubject: MedVitals Migration SLA & Security Requirements\n\nHi Team,\n\nFollowing up on our discovery meeting. We want to confirm if DecisionOS can guarantee a 99.9% uptime SLA for regional operations and whether we can deploy pilot staging within 60 days. Full HIPAA encryption is required.\n\nBest,\nLarry Page`);
+          } else if (source === "Slack / Teams") {
+            setInputText(`Slack Export - Channel: #deal-medvitals\n[09:24 AM] Jordan Vance (AE): MedVitals wants to know if we can offer a 15% discount for a 3-year term.\n[09:26 AM] Lisa (Finance): Standard playbook says max discount is 10% unless approved by VP.\n[09:27 AM] Jordan Vance (AE): They also asked for an on-site database pilot specialist.`);
+          } else if (source === "Zoom Transcripts") {
+            setInputText(`Zoom Meeting Transcript - MedVitals Deal Desk Discovery\n\nMedVitals IT Director: We are seeking to deploy an Enterprise Decision Intelligence Platform to automate clinical scheduling across our regional hospitals. We need to reduce scheduling latency by 75%.\n\nMedVitals CFO: Budget is key. We have allocated $120,000. Can we get custom support SLAs included?`);
+          }
+        }, 1200);
+        
+      }, 1000);
+    }, 1500);
+  };
 
   const handleStartAnalysis = async () => {
     if (!inputText.trim()) return;
@@ -302,10 +352,13 @@ export function Workflows() {
             </div>
 
             <textarea
-              value={inputText}
+              value={syncingSource ? `[SYSTEM] Authenticating secure connection to ${syncingSource}...\n[SYSTEM] Fetching latest communications & logs...\n[SYSTEM] Compiling interaction stream transcripts...` : inputText}
               onChange={(e) => setInputText(e.target.value)}
+              disabled={!!syncingSource}
               placeholder="Paste transcript, CRM notes, or meeting summary here..."
-              className="flex-1 min-h-[300px] p-4 rounded-xl bg-background border border-border text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all text-sm leading-7 placeholder:text-muted-foreground/50"
+              className={`flex-1 min-h-[300px] p-4 rounded-xl bg-background border border-border text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 transition-all text-sm leading-7 placeholder:text-muted-foreground/50 ${
+                syncingSource ? "animate-pulse opacity-60 text-slate-500 bg-slate-50 font-mono" : ""
+              }`}
             />
 
             <div className="flex items-center justify-between">
@@ -357,15 +410,28 @@ export function Workflows() {
                   { icon: <Mail size={14} />, label: "Email Sync" },
                   { icon: <MessageSquare size={14} />, label: "Slack / Teams" },
                   { icon: <FileText size={14} />, label: "Zoom Transcripts" },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex items-center gap-2 text-xs text-muted-foreground bg-card p-3 rounded-xl border border-border hover:border-primary/30 hover:text-foreground transition-all cursor-pointer"
-                  >
-                    <span className="text-primary">{item.icon}</span>
-                    <span className="font-medium">{item.label}</span>
-                  </div>
-                ))}
+                ].map((item) => {
+                  const isConnected = connectedSource === item.label;
+                  const isSyncing = syncingSource === item.label;
+                  return (
+                    <div
+                      key={item.label}
+                      onClick={() => !syncingSource && handleSourceClick(item.label)}
+                      className={`flex items-center gap-2 text-xs p-3 rounded-xl border transition-all cursor-pointer select-none ${
+                        isSyncing
+                          ? "bg-amber-50 border-amber-300 text-amber-800 font-semibold cursor-wait animate-pulse"
+                          : isConnected
+                          ? "bg-emerald-50 border-emerald-300 text-emerald-800 font-semibold"
+                          : "text-muted-foreground bg-card border-border hover:border-primary/35 hover:text-foreground"
+                      }`}
+                    >
+                      <span className={isSyncing ? "text-amber-600 animate-spin" : isConnected ? "text-emerald-600" : "text-primary"}>
+                        {isSyncing ? <Loader2 size={14} /> : item.icon}
+                      </span>
+                      <span className="font-medium">{isSyncing ? "Syncing..." : item.label}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -385,6 +451,100 @@ export function Workflows() {
           </div>
         </div>
       </div>
+
+      {/* Integrations Auth Modal */}
+      {authModalSource && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl max-w-sm w-full space-y-4 animate-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h4 className="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Connect {authModalSource}
+              </h4>
+              <button onClick={() => setAuthModalSource(null)} className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-md hover:bg-slate-50">
+                <X size={15} />
+              </button>
+            </div>
+
+            {/* Form Content */}
+            {modalLoading ? (
+              <div className="flex flex-col items-center justify-center py-8 text-slate-600 space-y-3">
+                <Loader2 className="animate-spin text-primary" size={24} />
+                <p className="text-xs font-semibold">Establishing OAuth connection...</p>
+                <p className="text-[10px] text-slate-400">Exchanging API tokens and syncing schema metadata</p>
+              </div>
+            ) : modalSuccess ? (
+              <div className="flex flex-col items-center justify-center py-8 text-slate-600 space-y-3">
+                <CheckCircle2 className="text-emerald-500 animate-bounce" size={32} />
+                <p className="text-xs font-semibold text-emerald-800">Connection Authorized!</p>
+                <p className="text-[10px] text-slate-400">Secure pipeline tunnel established successfully</p>
+              </div>
+            ) : (
+              <div className="space-y-4 text-xs text-slate-700">
+                <p className="text-[11px] text-slate-500 leading-normal">
+                  Authorize DecisionOS to sync deal artifacts and communication logs directly from your enterprise {authModalSource} instance.
+                </p>
+                
+                {authModalSource === "CRM Sync" && (
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">CRM Instance URL</label>
+                    <input 
+                      type="text" 
+                      defaultValue="https://acme.lightning.force.com" 
+                      placeholder="https://your-domain.lightning.force.com"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-primary text-xs" 
+                    />
+                  </div>
+                )}
+
+                {authModalSource === "Email Sync" && (
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Service Account Email</label>
+                    <input 
+                      type="text" 
+                      defaultValue="google-oauth-sync@decisionos.iam.gserviceaccount.com" 
+                      placeholder="service-account@domain.com"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-primary text-xs" 
+                    />
+                  </div>
+                )}
+
+                {authModalSource === "Slack / Teams" && (
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Slack Workspace ID</label>
+                    <input 
+                      type="text" 
+                      defaultValue="slack://techflow-hq-workspace" 
+                      placeholder="T00000000"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-primary text-xs" 
+                    />
+                  </div>
+                )}
+
+                {authModalSource === "Zoom Transcripts" && (
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Zoom Host Meeting ID</label>
+                    <input 
+                      type="text" 
+                      defaultValue="984-3029-4822" 
+                      placeholder="000-0000-0000"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-primary text-xs" 
+                    />
+                  </div>
+                )}
+
+                <button 
+                  onClick={handleModalAuthSubmit}
+                  className="w-full py-2.5 bg-primary text-white rounded-lg font-semibold text-xs hover:bg-primary/95 transition-colors shadow-sm"
+                >
+                  Authorize & Connect
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

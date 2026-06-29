@@ -106,6 +106,9 @@ async def submit_approval(request: ApprovalSubmitRequest) -> ApprovalResponse:
             detail={"errors": result.get("errors", ["Approval submission failed."])},
         )
 
+    if "updated_state" in result:
+        register_workflow_state(request.workflow_id, result["updated_state"])
+
     return ApprovalResponse(
         success=True,
         approval_status=ApprovalStatus.APPROVED,
@@ -150,6 +153,9 @@ async def modify_approval(request: ApprovalModifyRequest) -> ApprovalResponse:
             detail={"errors": result.get("errors", ["Modification submission failed."])},
         )
 
+    if "updated_state" in result:
+        register_workflow_state(request.workflow_id, result["updated_state"])
+
     return ApprovalResponse(
         success=True,
         approval_status=ApprovalStatus.MODIFIED,
@@ -193,6 +199,9 @@ async def escalate_approval(request: ApprovalEscalateRequest) -> ApprovalRespons
             detail={"errors": result.get("errors", ["Escalation submission failed."])},
         )
 
+    if "updated_state" in result:
+        register_workflow_state(request.workflow_id, result["updated_state"])
+
     return ApprovalResponse(
         success=True,
         approval_status=ApprovalStatus.ESCALATED,
@@ -233,6 +242,9 @@ async def reject_approval(request: ApprovalRejectRequest) -> ApprovalResponse:
             status_code=422,
             detail={"errors": result.get("errors", ["Rejection submission failed."])},
         )
+
+    if "updated_state" in result:
+        register_workflow_state(request.workflow_id, result["updated_state"])
 
     return ApprovalResponse(
         success=True,

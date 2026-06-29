@@ -132,9 +132,9 @@ def validate_reviewer_fields(
     if not reviewer or not reviewer.strip():
         errors.append("Reviewer name/ID must be provided.")
 
-    if not approval_comments or len(approval_comments.strip()) < 10:
+    if not approval_comments or len(approval_comments.strip()) < 3:
         errors.append(
-            "Approval comments must be at least 10 characters. "
+            "Approval comments must be at least 3 characters. "
             "Provide a meaningful justification for the approval decision."
         )
 
@@ -170,8 +170,8 @@ def validate_escalation_fields(escalated_to: str, escalation_reason: str) -> dic
     errors: list[str] = []
     if not escalated_to or not escalated_to.strip():
         errors.append("escalated_to must specify the executive reviewer or body.")
-    if not escalation_reason or len(escalation_reason.strip()) < 10:
-        errors.append("escalation_reason must be at least 10 characters.")
+    if not escalation_reason or len(escalation_reason.strip()) < 3:
+        errors.append("escalation_reason must be at least 3 characters.")
     return {"valid": len(errors) == 0, "errors": errors}
 
 
@@ -190,6 +190,6 @@ def validate_modification_fields(
             errors.append(f"modified_sections[{i}].section must be specified.")
         if not section.get("after"):
             errors.append(f"modified_sections[{i}].after (new value) must be provided.")
-    if not approval_comments or len(approval_comments.strip()) < 10:
+    if not approval_comments or len(approval_comments.strip()) < 3:
         errors.append("Approval comments are required when submitting modifications.")
     return {"valid": len(errors) == 0, "errors": errors}

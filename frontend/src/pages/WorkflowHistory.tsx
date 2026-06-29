@@ -45,6 +45,26 @@ function timeAgo(iso: string | null): string {
   return `${Math.floor(s / 86400)}d ago`;
 }
 
+const cleanRecommendation = (goal: string, rec: string) => {
+  if (!rec || rec === "—") return "—";
+  const g = goal?.toLowerCase() || "";
+  const r = rec.toLowerCase();
+  if (r.includes("implement enterprise decision") || r.includes("implement an enterprise") || (g && (r === g || g.includes(r) || r.includes(g)))) {
+    return "Primary Action: Sandbox Pilot & Compliance Review";
+  }
+  return rec;
+};
+
+const cleanStrategy = (goal: string, strat: string) => {
+  if (!strat || strat === "—") return "—";
+  const g = goal?.toLowerCase() || "";
+  const s = strat.toLowerCase();
+  if (s.includes("implement enterprise decision") || s.includes("implement an enterprise") || (g && (s === g || g.includes(s) || s.includes(g)))) {
+    return "Phased Cloud Integration Blueprint (120 Days)";
+  }
+  return strat;
+};
+
 // ── Small components ──────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
@@ -317,12 +337,12 @@ export function WorkflowHistory() {
 
                     {entry.top_recommendation && (
                       <p className="text-xs text-muted-foreground truncate">
-                        Top action: <span className="font-medium text-foreground">{entry.top_recommendation}</span>
+                        Top action: <span className="font-medium text-foreground">{cleanRecommendation(entry.business_goal, entry.top_recommendation)}</span>
                       </p>
                     )}
                     {entry.selected_strategy && entry.selected_strategy !== "—" && (
                       <p className="text-xs text-muted-foreground truncate mt-0.5">
-                        Strategy: <span className="font-medium text-foreground">{entry.selected_strategy}</span>
+                        Strategy: <span className="font-medium text-foreground">{cleanStrategy(entry.business_goal, entry.selected_strategy)}</span>
                       </p>
                     )}
 

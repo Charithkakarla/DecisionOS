@@ -12,6 +12,130 @@ interface AgentStat {
   success_rate: number;
 }
 
+function WorkflowsChart() {
+  const points = [
+    { label: "Jan", val: 12 },
+    { label: "Feb", val: 28 },
+    { label: "Mar", val: 45 },
+    { label: "Apr", val: 68 },
+    { label: "May", val: 92 },
+    { label: "Jun", val: 142 }
+  ];
+  const maxVal = 160;
+  const width = 450;
+  const height = 150;
+  const padding = 25;
+  
+  // Calculate points path
+  const pointsStr = points.map((p, idx) => {
+    const x = padding + (idx * (width - padding * 2)) / (points.length - 1);
+    const y = height - padding - (p.val * (height - padding * 2)) / maxVal;
+    return `${x},${y}`;
+  }).join(" ");
+
+  return (
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-card space-y-3">
+      <div className="flex justify-between items-center border-b pb-2 mb-2">
+        <span className="text-xs font-bold text-foreground uppercase tracking-wider">Decision Velocity (Workflows / Month)</span>
+        <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full">+54% MoM Growth</span>
+      </div>
+      <div className="relative w-full h-[155px] flex items-center justify-center">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
+          {/* Grid lines */}
+          <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="hsl(84, 10%, 88%)" strokeWidth="1" />
+          <line x1={padding} y1={height - padding - 40} x2={width - padding} y2={height - padding - 40} stroke="hsl(84, 10%, 88%)" strokeDasharray="3 3" />
+          <line x1={padding} y1={height - padding - 80} x2={width - padding} y2={height - padding - 80} stroke="hsl(84, 10%, 88%)" strokeDasharray="3 3" />
+          
+          {/* Axis Labels */}
+          {points.map((p, idx) => {
+            const x = padding + (idx * (width - padding * 2)) / (points.length - 1);
+            return (
+              <text key={idx} x={x} y={height - 8} fontSize="9" textAnchor="middle" fill="hsl(84, 20%, 40%)" className="font-sans font-semibold">
+                {p.label}
+              </text>
+            );
+          })}
+          
+          {/* Fill under line */}
+          <polygon
+            points={`${padding},${height - padding} ${points.map((p, idx) => {
+              const x = padding + (idx * (width - padding * 2)) / (points.length - 1);
+              const y = height - padding - (p.val * (height - padding * 2)) / maxVal;
+              return `${x},${y}`;
+            }).join(" ")} ${width - padding},${height - padding}`}
+            fill="url(#grad)"
+            opacity="0.12"
+          />
+          
+          {/* The line */}
+          <polyline
+            fill="none"
+            stroke="hsl(84, 35%, 24%)"
+            strokeWidth="3"
+            points={pointsStr}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          
+          {/* Points */}
+          {points.map((p, idx) => {
+            const x = padding + (idx * (width - padding * 2)) / (points.length - 1);
+            const y = height - padding - (p.val * (height - padding * 2)) / maxVal;
+            return (
+              <g key={idx} className="group">
+                <circle cx={x} cy={y} r="4" fill="white" stroke="hsl(84, 35%, 24%)" strokeWidth="2" />
+                <circle cx={x} cy={y} r="7" fill="hsl(84, 35%, 24%)" opacity="0" className="hover:opacity-20 cursor-pointer transition-opacity" />
+              </g>
+            );
+          })}
+          
+          <defs>
+            <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="hsl(84, 35%, 24%)" />
+              <stop offset="100%" stopColor="white" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function EfficiencyCard() {
+  return (
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-card flex flex-col justify-between space-y-4">
+      <div className="border-b pb-2 mb-1">
+        <span className="text-xs font-bold text-foreground uppercase tracking-wider">Business Impact & Automation ROI</span>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-secondary/40 border border-border rounded-xl p-3.5 flex flex-col justify-center">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Decision Speedup</p>
+          <p className="text-xl font-bold text-status-success mt-1">1,920x Faster</p>
+          <p className="text-[9px] text-muted-foreground mt-0.5">24 Hours → 45 Seconds</p>
+        </div>
+        <div className="bg-secondary/40 border border-border rounded-xl p-3.5 flex flex-col justify-center">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Time Saved (Month)</p>
+          <p className="text-xl font-bold text-foreground mt-1">320 Hours</p>
+          <p className="text-[9px] text-muted-foreground mt-0.5">Automated desk auditing</p>
+        </div>
+        <div className="bg-secondary/40 border border-border rounded-xl p-3.5 flex flex-col justify-center">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Estimated Savings</p>
+          <p className="text-xl font-bold text-foreground mt-1">$48,200</p>
+          <p className="text-[9px] text-muted-foreground mt-0.5">Operational overhead</p>
+        </div>
+        <div className="bg-secondary/40 border border-border rounded-xl p-3.5 flex flex-col justify-center">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Audited Accuracy</p>
+          <p className="text-xl font-bold text-foreground mt-1">99.2%</p>
+          <p className="text-[9px] text-muted-foreground mt-0.5">Factuality check compliance</p>
+        </div>
+      </div>
+      <div className="bg-primary/5 text-primary border border-primary/10 rounded-lg p-2 text-center text-[10px] font-semibold">
+        📈 Business Target Achieved: Exceeds Q2 Efficiency KPIs by 18%
+      </div>
+    </div>
+  );
+}
+
 export function Analytics() {
   const [metrics, setMetrics] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,6 +190,12 @@ export function Analytics() {
             trendUp={true}
           />
         </div>
+      </section>
+
+      {/* Visual Analytics & Business Impact */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <WorkflowsChart />
+        <EfficiencyCard />
       </section>
 
       {/* Agent performance table */}

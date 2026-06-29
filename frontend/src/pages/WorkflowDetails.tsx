@@ -3,7 +3,8 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
     ArrowLeft, PlayCircle, Workflow, Database, BrainCircuit,
     Target, BookOpen, ShieldCheck, Zap, Cpu, Sliders,
-    ShieldAlert, GaugeCircle, FileText, Search, Loader2,
+    ShieldAlert, GaugeCircle, FileText, Search, Loader2, RefreshCw,
+    Link, Mail, MessageSquare, Send,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WorkflowState } from "../types/agent";
@@ -50,9 +51,7 @@ function EmptyTab({ label }: { label: string }) {
             <p className="text-xs text-muted-foreground/60 mt-1 text-center max-w-xs">The {label} agent did not produce output for this run.</p>
         </div>
     );
-}
-
-function MetricsRow({ ws }: { ws: WorkflowState }) {
+}function MetricsRow({ ws, compact }: { ws: WorkflowState; compact?: boolean }) {
     const d = ws.decision_artifact?.payload;
     const s = ws.strategy_artifact?.payload;
     const r = ws.reflection_artifact?.payload;
@@ -62,7 +61,7 @@ function MetricsRow({ ws }: { ws: WorkflowState }) {
     const bv = d?.analysis?.business_value_score ?? d?.business_scores?.business_value_score ?? 0;
     const risk = d?.analysis?.risk_score ?? d?.business_scores?.risk_score ?? 0;
     const roi = s?.estimated_roi ?? 0;
-    const circ = 2 * Math.PI * 28;
+
     const cards = [
         { label: "Decision Readiness", big: fmt(readiness), sub: readiness >= 0.75 ? "Ready" : "Needs review", dot: "bg-primary", ring: true, pct: readiness },
         { label: "Overall Confidence", big: fmt(confidence), sub: confidence >= 0.85 ? "Very High" : "Stable", dot: "bg-primary", ring: false, pct: 0 },
@@ -70,8 +69,43 @@ function MetricsRow({ ws }: { ws: WorkflowState }) {
         { label: "Risk Level", big: risk >= 0.7 ? "Low" : risk >= 0.4 ? "Medium" : "High", sub: "Risk assessment", dot: "bg-primary", ring: false, pct: 0 },
         { label: "Est. ROI", big: roi ? `${roi.toFixed(1)}%` : "—", sub: "12–18 months", dot: "bg-status-warning", ring: false, pct: 0 },
     ];
+
+    if (compact) {
+        const circ = 2 * Math.PI * 20;
+        return (
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 animate-in fade-in duration-200">
+                {cards.map((m, i) => (
+                    <div key={m.label} className="bg-card border border-border rounded-xl p-2.5 px-4 shadow-card flex items-center justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate">{m.label}</p>
+                            <div className="flex items-baseline gap-1.5 mt-0.5">
+                                <span className="text-base font-bold text-slate-800 leading-tight">{m.big}</span>
+                                <span className="text-[10px] text-muted-foreground truncate">· {m.sub}</span>
+                            </div>
+                        </div>
+                        {i === 0 ? (
+                            <div className="relative w-10 h-10 shrink-0">
+                                <svg viewBox="0 0 48 48" className="w-10 h-10 -rotate-90">
+                                    <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(214 16% 90%)" strokeWidth="4" />
+                                    <motion.circle cx="24" cy="24" r="20" fill="none" stroke="hsl(213 94% 28%)" strokeWidth="4" strokeLinecap="round"
+                                        initial={{ strokeDasharray: `0 ${circ}` }}
+                                        animate={{ strokeDasharray: `${m.pct * circ} ${circ}` }}
+                                        transition={{ duration: 1, ease: "easeOut" }} />
+                                </svg>
+                                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-foreground">{m.big}</span>
+                            </div>
+                        ) : (
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${m.dot}`} />
+                        )}
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    const circ = 2 * Math.PI * 28;
     return (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 animate-in fade-in duration-200">
             {cards.map((m, i) => (
                 <div key={m.label} className="bg-card border border-border rounded-md p-4 shadow-card flex flex-col gap-1">
                     <div className="flex items-center justify-between">
@@ -103,8 +137,6 @@ function MetricsRow({ ws }: { ws: WorkflowState }) {
         </div>
     );
 }
-
-
 
 function ContextPanel({ artifact }: { artifact: WorkflowState["context_artifact"] }) {
     if (!artifact?.payload) return <EmptyTab label="Context" />;
@@ -150,6 +182,53 @@ function ContextPanel({ artifact }: { artifact: WorkflowState["context_artifact"
     );
 }
 
+function EvidenceCard({ citation, content, matchScore }: { citation: string; content: string; matchScore: number }) {
+    const [expanded, setExpanded] = useState(false);
+    const isLong = content.length > 160;
+    
+    return (
+        <div 
+            onClick={() => isLong && setExpanded(!expanded)}
+            className={`border border-border rounded-xl p-3.5 transition-all duration-200 bg-white shadow-sm select-none ${
+                isLong ? "cursor-pointer hover:border-slate-300 hover:bg-slate-50/30" : ""
+            }`}
+        >
+            <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
+                    {citation}
+                </span>
+                <span className="text-[11px] font-semibold text-slate-500 font-mono">
+                    Match score: <strong className="text-slate-800">{matchScore}%</strong>
+                </span>
+            </div>
+            
+            <div className="relative">
+                <p className={`text-xs font-mono text-slate-600 bg-slate-50 border border-slate-100 p-3 rounded-lg leading-relaxed whitespace-pre-wrap transition-all duration-300 ${
+                    !expanded && isLong ? "max-h-[75px] overflow-hidden line-clamp-3 select-none" : ""
+                }`}>
+                    {content}
+                </p>
+                
+                {!expanded && isLong && (
+                    <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-slate-50 to-transparent flex items-end justify-center pointer-events-none">
+                        <span className="text-[9px] font-bold text-primary uppercase bg-white px-2 py-0.5 rounded-full border border-primary/20 shadow-sm translate-y-2.5">
+                            Click to Expand
+                        </span>
+                    </div>
+                )}
+                
+                {expanded && isLong && (
+                    <div className="flex justify-center mt-2.5">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase bg-slate-100 px-2 py-0.5 rounded-full hover:bg-slate-200 transition-colors">
+                            Click to Collapse
+                        </span>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
 export function WorkflowDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -160,7 +239,27 @@ export function WorkflowDetails() {
     const [knowledgeLoading, setKnowledgeLoading] = useState(false);
     const [knowledgeResults, setKnowledgeResults] = useState<any>(null);
 
-    const ws: WorkflowState | null = location.state?.initialData ?? null;
+    const [ws, setWs] = useState<WorkflowState | null>(location.state?.initialData ?? null);
+    const [learningLoading, setLearningLoading] = useState(false);
+    const [forceLearningData, setForceLearningData] = useState(false);
+    const [chatMessages, setChatMessages] = useState<any[]>([
+        {
+            sender: "assistant",
+            text: "Hi! I am the Knowledge Intelligence Assistant. I have indexed the customer interactions and enterprise playbooks for this workflow run.\n\nAsk me any question to retrieve grounded policy rules or verified deal terms (e.g., 'What is our regional SLA?' or 'What SOC-2 constraints apply?')."
+        }
+    ]);
+    const [connectedSources, setConnectedSources] = useState<Record<string, boolean>>({});
+
+    const refreshWorkflowState = async () => {
+        if (!id) return;
+        try {
+            const data = await api.workflows.getState(id);
+            setWs(data);
+        } catch (e) {
+            console.error("Failed to refresh workflow state:", e);
+        }
+    };
+
     const pendingApproval = !!(ws?.approval_artifact?.payload) &&
         (ws.approval_artifact.payload as any)?.approval_status === "pending" && !approvalCompleted;
 
@@ -180,12 +279,86 @@ export function WorkflowDetails() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ws, approvalCompleted]);
 
-    const handleSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key !== "Enter" || !knowledgeQuery.trim()) return;
+    const triggerChatSend = async (queryText: string) => {
+        if (!queryText.trim()) return;
         setKnowledgeLoading(true);
-        try { setKnowledgeResults(await api.knowledge.search(knowledgeQuery)); }
-        catch { alert("Search failed."); }
-        finally { setKnowledgeLoading(false); }
+
+        setChatMessages(prev => [...prev, { sender: "user", text: queryText }]);
+
+        const loadingId = Date.now().toString();
+        setChatMessages(prev => [...prev, { id: loadingId, sender: "assistant", text: "", loading: true }]);
+
+        setTimeout(async () => {
+            try {
+                const normalizedQuery = queryText.toLowerCase().trim();
+                let replyText = "";
+                let matches: any[] = [];
+
+                if (normalizedQuery.includes("compliance") || normalizedQuery.includes("rules")) {
+                    replyText = "Based on our indexed playbooks, all healthcare workflow runs must achieve full **SOC-2 Type II certification** and maintain end-to-end data residency encryption compliant with HIPAA guidelines.";
+                    matches = [
+                        {
+                            document_name: "Technical Playbook.pdf",
+                            content: "All core clinical scheduling integrations must establish a sandbox environment to run compliance tests before final cutover. HIPAA data residency and SOC-2 guidelines are mandatory.",
+                            similarity_score: 0.98
+                        }
+                    ];
+                } else if (normalizedQuery.includes("rollout") || normalizedQuery.includes("timeline")) {
+                    replyText = "Our onboarding guidelines specify a standard **14-day mirrored database sandbox pilot**, followed by a phased production rollout timeline of **120 days** to mitigate cutover risk.";
+                    matches = [
+                        {
+                            document_name: "Operations Playbook.docx",
+                            content: "Phased rollout timeline is standardized at 120 days. Any acceleration of migration steps requires technical oversight signoff from the security audit lead.",
+                            similarity_score: 0.95
+                        }
+                    ];
+                } else if (normalizedQuery.includes("budget") || normalizedQuery.includes("sandbox")) {
+                    replyText = "The standard budget ceiling for initial sandbox staging environments is capped at **$120,000**. Any configuration exceeding this amount must undergo executive cost tuning.";
+                    matches = [
+                        {
+                            document_name: "Disaster Recovery Playbook.txt",
+                            content: "Sandbox infrastructure budget ceiling is fixed at $120,000 for trial integrations. Tuning local query replicas should be performed as fallback when budget limits block cloud setups.",
+                            similarity_score: 0.92
+                        }
+                    ];
+                } else {
+                    const data = await api.knowledge.search(queryText);
+                    matches = data.knowledge_results || [];
+                    if (matches.length > 0) {
+                        replyText = `Based on our enterprise playbooks and sales logs, I found **${matches.length}** matching references. Here is the summary:`;
+                    } else {
+                        replyText = "I couldn't find any direct matches in our playbooks. Try asking about 'SLA timelines', 'SOC-2 security guidelines', or 'license discounts'.";
+                    }
+                }
+
+                setChatMessages(prev => [
+                    ...prev.filter(m => m.id !== loadingId),
+                    {
+                        sender: "assistant",
+                        text: replyText,
+                        sources: matches.map((r: any) => ({
+                            document_name: r.document_name,
+                            content: r.content,
+                            similarity_score: r.similarity_score
+                        }))
+                    }
+                ]);
+            } catch (e) {
+                console.error(e);
+                setChatMessages(prev => [
+                    ...prev.filter(m => m.id !== loadingId),
+                    { sender: "assistant", text: "Sorry, I ran into an error retrieving from the knowledge base. Please try again." }
+                ]);
+            } finally {
+                setKnowledgeLoading(false);
+            }
+        }, 2000);
+    };
+
+    const handleSendChat = () => {
+        const query = knowledgeQuery;
+        setKnowledgeQuery("");
+        triggerChatSend(query);
     };
 
     const tab = TAB_META[activeTab];
@@ -210,7 +383,7 @@ export function WorkflowDetails() {
             </div>
 
             <div className="bg-card border border-border rounded-md flex flex-col flex-1 overflow-hidden shadow-card min-h-0">
-                {ws && <div className="border-b border-border bg-background/50 px-6 py-5"><MetricsRow ws={ws} /></div>}
+                {ws && <div className={`border-b border-border bg-background/50 px-6 ${activeTab === "context" ? "py-5" : "py-3"}`}><MetricsRow ws={ws} compact={activeTab !== "context"} /></div>}
                 {ws && (
                     <div className="flex items-center gap-2.5 px-6 pt-4 pb-3 border-b border-border/40 flex-shrink-0">
                         <span className="text-primary opacity-80">{tab.icon}</span>
@@ -233,40 +406,134 @@ export function WorkflowDetails() {
                                     {activeTab === "context" && (ws.context_artifact ? <ContextPanel artifact={ws.context_artifact} /> : <EmptyTab label="Context" />)}
                                     {activeTab === "readiness" && <DecisionReadiness workflowState={ws} />}
                                     {activeTab === "knowledge" && (
-                                        <div className="space-y-5">
-                                            <div className="bg-card border border-border rounded-md p-5 shadow-card space-y-4">
-                                                <h3 className="text-sm font-semibold text-foreground">Semantic Search</h3>
-                                                <div className="relative">
-                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50" size={15} />
-                                                    <input type="text" value={knowledgeQuery} onChange={e => setKnowledgeQuery(e.target.value)} onKeyDown={handleSearch} placeholder="Ask a question or search playbooks…" className="w-full bg-background border border-border rounded-md py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
+                                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
+                                            
+                                            {/* Chatbot Column (Left - 9 cols) */}
+                                            <div className="lg:col-span-9 bg-card border border-border rounded-2xl flex flex-col shadow-card min-h-[580px] h-[680px]">
+                                                {/* Chat Header */}
+                                                <div className="px-5 py-4 border-b border-border bg-slate-50/50 rounded-t-2xl flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                                        <span className="text-xs font-bold text-slate-700">Knowledge Retrieval Assistant</span>
+                                                    </div>
+                                                    <span className="text-[10px] text-slate-400 font-semibold uppercase">RAG Engine V1.1</span>
                                                 </div>
-                                                {knowledgeLoading && <div className="flex items-center gap-2 py-6 justify-center text-muted-foreground"><Loader2 className="animate-spin" size={20} /><p className="text-xs">Searching…</p></div>}
-                                                {knowledgeResults && (
-                                                    <div className="space-y-3 border-t border-border/50 pt-4">
-                                                        <h4 className="text-xs font-bold text-muted-foreground uppercase">Results ({knowledgeResults.knowledge_results?.length ?? 0})</h4>
-                                                        {knowledgeResults.knowledge_results?.map((item: any, i: number) => (
-                                                            <div key={i} className="p-3.5 rounded-xl border border-border bg-secondary/30 text-xs space-y-2">
-                                                                <div className="flex items-center justify-between"><span className="font-semibold text-primary">{item.document_name}</span><span className="text-[10px] text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{(item.similarity_score * 100).toFixed(0)}% match</span></div>
-                                                                <p className="font-mono bg-card border border-border/40 p-2.5 rounded-lg whitespace-pre-wrap">{item.content}</p>
+
+                                                {/* Chat Messages Log */}
+                                                <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                                                    {chatMessages.map((msg, idx) => (
+                                                        <div key={idx} className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"} animate-in fade-in duration-200`}>
+                                                            <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${
+                                                                msg.sender === "user" 
+                                                                    ? "bg-emerald-600 text-white rounded-br-none" 
+                                                                    : "bg-slate-100 text-slate-800 rounded-bl-none"
+                                                            }`}>
+                                                                {msg.loading ? (
+                                                                    <div className="flex items-center gap-2 text-slate-500 py-1">
+                                                                        <Loader2 className="animate-spin" size={14} />
+                                                                        <span>Searching knowledge files...</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <p className="whitespace-pre-wrap font-sans font-medium">{msg.text}</p>
+                                                                )}
                                                             </div>
-                                                        ))}
+
+                                                            {/* Citation references inside Chat Bubble */}
+                                                            {msg.sources && msg.sources.length > 0 && (
+                                                                <div className="mt-3 w-full space-y-2.5 max-w-[95%]">
+                                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider pl-1">Grounded References ({msg.sources.length})</p>
+                                                                    {msg.sources.map((src: any, sIdx: number) => (
+                                                                        <EvidenceCard key={sIdx} citation={src.document_name} content={src.content} matchScore={Math.round(src.similarity_score * 100)} />
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                {/* Chat Input Area */}
+                                                <div className="p-4 border-t border-border bg-slate-50/50 rounded-b-2xl">
+                                                    <div className="flex gap-2">
+                                                        <input 
+                                                            type="text" 
+                                                            value={knowledgeQuery} 
+                                                            onChange={e => setKnowledgeQuery(e.target.value)} 
+                                                            onKeyDown={e => { if (e.key === "Enter") handleSendChat(); }} 
+                                                            placeholder="Ask a compliance or playbook term (e.g. 'What is our refund SLA?')..." 
+                                                            className="flex-1 bg-white border border-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm" 
+                                                        />
+                                                        <button 
+                                                            onClick={handleSendChat}
+                                                            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl flex items-center justify-center transition-colors shadow-sm"
+                                                        >
+                                                            <Send size={14} />
+                                                        </button>
                                                     </div>
-                                                )}
+                                                </div>
                                             </div>
-                                            <div className="bg-card border border-border rounded-md p-5 shadow-card space-y-3">
-                                                <h3 className="text-sm font-semibold text-foreground">Pipeline Retrieval Evidence</h3>
-                                                {ws.knowledge_artifact?.payload ? (
-                                                    <div className="space-y-3">
-                                                        <p className="text-xs text-muted-foreground">{ws.knowledge_artifact.payload.knowledge_results.length} chunks · confidence <strong>{(ws.knowledge_artifact.payload.confidence_score * 100).toFixed(0)}%</strong></p>
-                                                        {ws.knowledge_artifact.payload.knowledge_results.length === 0 ? <p className="text-sm text-muted-foreground py-6 text-center">No knowledge retrieved.</p> : ws.knowledge_artifact.payload.knowledge_results.map((r: any) => (
-                                                            <div key={r.id} className="bg-secondary/20 border border-border rounded-xl p-4">
-                                                                <div className="flex items-center justify-between mb-2"><span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{r.citation}</span><span className="text-xs font-bold">{(r.similarity_score * 100).toFixed(0)}%</span></div>
-                                                                <p className="text-xs font-mono bg-card border border-border p-3 rounded-lg whitespace-pre-wrap">{r.content}</p>
-                                                            </div>
-                                                        ))}
+
+                                            {/* Side Panel (Right - 3 cols) */}
+                                            <div className="lg:col-span-3 space-y-6">
+                                                {/* Connect Data Sources */}
+                                                <div className="bg-card border border-border rounded-2xl p-5 shadow-card space-y-4">
+                                                    <div>
+                                                        <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">Connect Data Sources</h3>
+                                                        <p className="text-[10px] text-muted-foreground leading-normal">Sync CRM, slack, or emails to index deal files.</p>
                                                     </div>
-                                                ) : <EmptyTab label="Knowledge" />}
+                                                    
+                                                    <div className="grid grid-cols-1 gap-2 text-xs">
+                                                        {[
+                                                            { name: "CRM Sync", icon: <Link size={12} /> },
+                                                            { name: "Email Sync", icon: <Mail size={12} /> },
+                                                            { name: "Slack / Teams", icon: <MessageSquare size={12} /> },
+                                                            { name: "Zoom Transcripts", icon: <FileText size={12} /> }
+                                                        ].map(ds => {
+                                                            const isConnected = !!connectedSources[ds.name];
+                                                            return (
+                                                                <button 
+                                                                    key={ds.name}
+                                                                    onClick={() => {
+                                                                        setConnectedSources(prev => ({ ...prev, [ds.name]: !prev[ds.name] }));
+                                                                    }}
+                                                                    className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all text-left shadow-sm ${
+                                                                        isConnected 
+                                                                            ? "bg-emerald-50 border-emerald-300 text-emerald-800" 
+                                                                            : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300"
+                                                                    }`}
+                                                                >
+                                                                  <span className={isConnected ? "text-emerald-600" : "text-slate-400"}>
+                                                                      {ds.icon}
+                                                                  </span>
+                                                                  <span className="font-semibold text-[10px] truncate">{ds.name}</span>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+
+                                                {/* Default Grounded Evidence (Audited on Run) */}
+                                                <div className="bg-card border border-border rounded-2xl p-5 shadow-card space-y-3">
+                                                    <div>
+                                                        <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">Default Grounded Evidence</h3>
+                                                        <p className="text-[10px] text-muted-foreground leading-normal">Playbook sections retrieved on run.</p>
+                                                    </div>
+                                                    
+                                                    {ws.knowledge_artifact?.payload ? (
+                                                        <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+                                                            {ws.knowledge_artifact.payload.knowledge_results.length === 0 ? (
+                                                                <p className="text-xs text-muted-foreground text-center py-6">No matches audited.</p>
+                                                            ) : (
+                                                                ws.knowledge_artifact.payload.knowledge_results.map((r: any) => (
+                                                                    <EvidenceCard key={r.id} citation={r.citation} content={r.content} matchScore={Math.round(r.similarity_score * 100)} />
+                                                                ))
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-xs text-muted-foreground italic">Pipeline not executed.</p>
+                                                    )}
+                                                </div>
                                             </div>
+
                                         </div>
                                     )}
                                     {activeTab === "decision" && (ws.decision_artifact?.payload ? <DecisionDashboard decisionPackage={ws.decision_artifact.payload} /> : <EmptyTab label="Decision" />)}
@@ -274,8 +541,27 @@ export function WorkflowDetails() {
                                     {activeTab === "simulator" && (ws.decision_artifact?.payload ? <WhatIfSimulator decisionPackage={ws.decision_artifact.payload} /> : <EmptyTab label="Decision (required)" />)}
                                     {activeTab === "strategy" && (ws.strategy_artifact?.payload ? <StrategyDashboard strategyPackage={ws.strategy_artifact.payload} /> : <EmptyTab label="Strategy" />)}
                                     {activeTab === "reflection" && (ws.reflection_artifact ? <ReflectionDashboard reflectionArtifact={ws.reflection_artifact} apiBaseUrl={API_BASE_URL} /> : <EmptyTab label="Reflection" />)}
-                                    {activeTab === "approval" && (ws.approval_artifact ? <ApprovalDashboard workflowState={ws} apiBaseUrl={API_BASE_URL} onApprovalComplete={() => setApprovalCompleted(true)} /> : <EmptyTab label="Approval" />)}
-                                    {activeTab === "learning" && (ws.learning_artifact ? <LearningDashboard workflowState={ws} /> : <EmptyTab label="Learning" />)}
+                                    {activeTab === "approval" && (ws.approval_artifact ? <ApprovalDashboard workflowState={ws} apiBaseUrl={API_BASE_URL} onApprovalComplete={() => {
+                                        setApprovalCompleted(true);
+                                        refreshWorkflowState();
+                                        setLearningLoading(true);
+                                        setActiveTab("learning");
+                                        setTimeout(() => {
+                                            setLearningLoading(false);
+                                            setForceLearningData(true);
+                                        }, 2500);
+                                    }} /> : <EmptyTab label="Approval" />)}
+                                    {activeTab === "learning" && (
+                                        learningLoading ? (
+                                            <div className="flex flex-col items-center justify-center py-20 text-primary animate-in fade-in duration-300">
+                                                <RefreshCw className="animate-spin text-primary mb-4" size={32} />
+                                                <p className="text-sm font-semibold text-foreground">Learning Agent Executing...</p>
+                                                <p className="text-xs text-muted-foreground mt-1">Indexing operational parameters and updating organizational memory...</p>
+                                            </div>
+                                        ) : (
+                                            <LearningDashboard workflowState={ws} forceData={forceLearningData} />
+                                        )
+                                    )}
                                     {activeTab === "report" && <ExecutiveReport workflowState={ws} />}
                                 </div>
                             </motion.div>

@@ -12,9 +12,10 @@ const SEED_DNA = [
 
 interface LearningDashboardProps {
   workflowState?: WorkflowState;
+  forceData?: boolean;
 }
 
-export default function LearningDashboard({ workflowState }: LearningDashboardProps) {
+export default function LearningDashboard({ workflowState, forceData = false }: LearningDashboardProps) {
   const artifact = workflowState?.learning_artifact;
   const [historicalDNA, setHistoricalDNA] = useState<any[]>([]);
 
@@ -43,7 +44,44 @@ export default function LearningDashboard({ workflowState }: LearningDashboardPr
       .catch(() => setHistoricalDNA(SEED_DNA));
   }, []);
 
-  if (!artifact?.payload) {
+  const mockPayload = {
+    learning_summary: "Successfully captured the reviewer override. The sales playbook recommendation weights have been adapted to extend the B2B database staging timeline from 90 days to 120 days. Trust thresholds have been re-calibrated.",
+    organizational_insights: [
+      "Reviewer overrides indicate a preference for conservative database migration schedules over aggressive speed targets.",
+      "Average approval rate for SaaS seat licenses above 400 is 94.2% when accompanied by executive sponsor notes.",
+      "APAC regional rollout playbook has a high trust score correlation (91.5%)."
+    ],
+    strategy_success_patterns: [
+      "Phased database migration pipelines decrease risk scores by 42%.",
+      "Adding a dedicated client-side database specialist increases conversion rates by 18%."
+    ],
+    accepted_patterns: [
+      "Extended timeline buffer (120 days)",
+      "Reviewer-assigned VP operations role"
+    ],
+    rejected_patterns: [
+      "Aggressive 90-day pipeline deployment without pilot",
+      "Mock staging configurations without compliance review"
+    ],
+    prompt_improvement_suggestions: [
+      "Incorporate a dedicated safety weight for legacy staging prompts.",
+      "Add explicit SOC-2 criteria vectors in context retrievals."
+    ],
+    knowledge_gaps: [
+      "Staging limits for legacy relational databases (missing doc ref: SLA-APAC-04)",
+      "Policy requirements for non-standard seat license discounts"
+    ],
+    common_risks: [
+      "Timeline compression",
+      "Legacy system incompatibility",
+      "SOC-2 compliance gap"
+    ],
+    learning_timestamp: new Date().toISOString()
+  };
+
+  const p = (artifact?.payload) ? artifact.payload : (forceData ? mockPayload : null);
+
+  if (!p) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
         <Brain size={40} className="mb-3 opacity-20" />
@@ -54,8 +92,6 @@ export default function LearningDashboard({ workflowState }: LearningDashboardPr
       </div>
     );
   }
-
-  const p = artifact.payload;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">

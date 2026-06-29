@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { Sliders, RefreshCw, TrendingUp, TrendingDown, Minus, Zap, DollarSign, Clock, Users, ShieldAlert } from "lucide-react";
 import type { DecisionPackage } from "../types/agent";
 
@@ -168,13 +168,29 @@ function ScoreBar({ label, value, baseline, color }: { label: string; value: num
 export default function WhatIfSimulator({ decisionPackage }: Props) {
   const [params, setParams] = useState<SimParams>(DEFAULTS);
   const [animKey, setAnimKey] = useState(0);
+  const [recalculating, setRecalculating] = useState(false);
+  const timeoutRef = useRef<any>(null);
 
   const set = useCallback(<K extends keyof SimParams>(key: K) => (v: number) => {
     setParams((p) => ({ ...p, [key]: v }));
     setAnimKey((k) => k + 1);
+
+    setRecalculating(true);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      setRecalculating(false);
+    }, 1200);
   }, []);
 
-  const reset = () => { setParams(DEFAULTS); setAnimKey((k) => k + 1); };
+  const reset = () => {
+    setParams(DEFAULTS);
+    setAnimKey((k) => k + 1);
+    setRecalculating(true);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      setRecalculating(false);
+    }, 1200);
+  };
 
   const result = useMemo(() => simulate(params, decisionPackage), [params, decisionPackage]);
 
@@ -239,7 +255,15 @@ export default function WhatIfSimulator({ decisionPackage }: Props) {
         </div>
 
         {/* Results — 3 cols */}
-        <div className="lg:col-span-3 space-y-5">
+        <div className="lg:col-span-3 space-y-5 relative">
+          {recalculating && (
+            <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] rounded-2xl z-20 flex flex-col items-center justify-center space-y-3 animate-in fade-in duration-200">
+              <RefreshCw className="animate-spin text-primary" size={24} />
+              <div className="text-[10px] font-bold text-primary uppercase tracking-widest animate-pulse">
+                Recalculating scenario pathways...
+              </div>
+            </div>
+          )}
           {/* Score recalculation */}
           <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-card" key={`scores-${animKey}`}>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Recalculated Scores</p>
