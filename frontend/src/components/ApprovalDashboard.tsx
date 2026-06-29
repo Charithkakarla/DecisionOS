@@ -168,7 +168,7 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
   const fetchTimeline = useCallback(async () => {
     if (!workflowId) return;
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/approval/timeline/${workflowId}`);
+      const res = await fetch(`${apiBaseUrl}/approval/timeline/${workflowId}`);
       if (res.ok) {
         const data = await res.json();
         setTimeline(data.timeline ?? []);
@@ -181,7 +181,7 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
   const fetchHistory = useCallback(async () => {
     if (!workflowId) return;
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/approval/history/${workflowId}`);
+      const res = await fetch(`${apiBaseUrl}/approval/history/${workflowId}`);
       if (res.ok) {
         const data: AuditHistoryResponse = await res.json();
         setAuditHistory(data.events);
@@ -220,7 +220,7 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
     setSubmitError(null);
     const durationSeconds = (Date.now() - reviewStartTime) / 1000;
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/approval/submit`, {
+      const res = await fetch(`${apiBaseUrl}/approval/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -258,7 +258,7 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
     const durationSeconds = (Date.now() - reviewStartTime) / 1000;
     const validSections = modifiedSections.filter(s => s.section.trim() && s.after.trim());
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/approval/modify`, {
+      const res = await fetch(`${apiBaseUrl}/approval/modify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -294,7 +294,7 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/approval/escalate`, {
+      const res = await fetch(`${apiBaseUrl}/approval/escalate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -328,7 +328,7 @@ export default function ApprovalDashboard({ workflowState, apiBaseUrl, onApprova
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/approval/reject`, {
+      const res = await fetch(`${apiBaseUrl}/approval/reject`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

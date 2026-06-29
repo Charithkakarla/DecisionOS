@@ -67,7 +67,7 @@ function EmptyTab({ label }: { label: string }) {
         { label: "Overall Confidence", big: fmt(confidence), sub: confidence >= 0.85 ? "Very High" : "Stable", dot: "bg-primary", ring: false, pct: 0 },
         { label: "Business Value", big: bv >= 0.75 ? "High" : bv >= 0.5 ? "Medium" : "Low", sub: "Impact tier", dot: "bg-primary", ring: false, pct: 0 },
         { label: "Risk Level", big: risk >= 0.7 ? "Low" : risk >= 0.4 ? "Medium" : "High", sub: "Risk assessment", dot: "bg-primary", ring: false, pct: 0 },
-        { label: "Est. ROI", big: roi ? `${roi.toFixed(1)}%` : "—", sub: "12–18 months", dot: "bg-status-warning", ring: false, pct: 0 },
+        { label: "Est. ROI", big: roi ? (roi >= 1000 ? `$${(roi / 1000).toFixed(0)}K` : `$${Math.round(roi)}`) : "—", sub: "12–18 months", dot: "bg-status-warning", ring: false, pct: 0 },
     ];
 
     if (compact) {
@@ -94,9 +94,7 @@ function EmptyTab({ label }: { label: string }) {
                                 </svg>
                                 <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-foreground">{m.big}</span>
                             </div>
-                        ) : (
-                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${m.dot}`} />
-                        )}
+                        ) : null}
                     </div>
                 ))}
             </div>
@@ -110,7 +108,6 @@ function EmptyTab({ label }: { label: string }) {
                 <div key={m.label} className="bg-card border border-border rounded-md p-4 shadow-card flex flex-col gap-1">
                     <div className="flex items-center justify-between">
                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{m.label}</p>
-                        <span className={`w-2 h-2 rounded-sm shrink-0 ${m.dot}`} />
                     </div>
                     {i === 0 ? (
                         <div className="flex items-center gap-3 mt-1">

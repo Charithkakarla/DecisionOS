@@ -51,6 +51,15 @@
 
     /* Radius: sharper corners for enterprise feel */
     --radius: 0.375rem;
+
+    /* ── Dark olive sidebar ────────────────────────────── */
+    --sidebar-bg: 72 20% 10%;
+    --sidebar-fg: 60 10% 88%;
+    --sidebar-muted: 60 8% 52%;
+    --sidebar-border: 72 14% 18%;
+    --sidebar-active-bg: 72 30% 18%;
+    --sidebar-active-fg: 55 60% 65%;
+    --sidebar-hover-bg: 72 16% 15%;
   }
 }
 

@@ -88,11 +88,6 @@ export default function DecisionDashboard({ decisionPackage }: DecisionDashboard
 
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="flex justify-between items-center bg-foreground/90 text-white px-4 py-2 rounded-2xl text-xs">
-        <span>Decision Package: <strong>{schema_version}</strong></span>
-        <span>Generated: <strong>{generated_at || "Just Now"}</strong></span>
-      </div>
 
       {/* 1. Executive Summary & Split Confidence Gauges */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">

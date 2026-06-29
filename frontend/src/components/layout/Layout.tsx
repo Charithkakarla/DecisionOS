@@ -12,6 +12,10 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const [cmdOpen, setCmdOpen] = useState(false);
   const [cmdSearch, setCmdSearch] = useState("");
+  const [isHovered, setIsHovered] = useState(false);
+  
+  const sidebarWidth = (isWorkflowDetail && !isHovered) ? 52 : 220;
+  const isCollapsed = isWorkflowDetail && !isHovered;
 
   // Shortcut Listener
   useEffect(() => {
@@ -114,14 +118,16 @@ export function Layout({ children }: { children: ReactNode }) {
         )}
       </AnimatePresence>
 
-      {/* Sidebar — expands with labels when no pipeline drawer, collapses to icon rail when pipeline opens */}
+      {/* Sidebar — expands on hover when in workflow detail */}
       <motion.div
-        animate={{ width: isWorkflowDetail ? 52 : 220 }}
+        animate={{ width: sidebarWidth }}
         transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
         className="shrink-0 h-full overflow-hidden"
         style={{ minWidth: 0 }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        <Sidebar collapsed={isWorkflowDetail} />
+        <Sidebar collapsed={isCollapsed} />
       </motion.div>
 
       {/* Analysis Pipeline drawer — slides in beside the icon rail */}

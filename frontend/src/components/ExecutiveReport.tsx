@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { FileText, Download, Loader2, CheckCircle2, LayoutTemplate, Presentation, Sheet } from "lucide-react";
+import { FileText, Download, Loader2, CheckCircle2, LayoutTemplate, Presentation, Sheet, Share2, Mail, MessageSquare, Copy } from "lucide-react";
 import type { WorkflowState } from "../types/agent";
 
 interface Props { workflowState: WorkflowState; }
@@ -304,6 +304,7 @@ export default function ExecutiveReport({ workflowState }: Props) {
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
 
   const reportData = buildReport(workflowState, template);
@@ -479,13 +480,64 @@ export default function ExecutiveReport({ workflowState }: Props) {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-primary/10 rounded-lg">
-          <FileText size={18} className="text-primary" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <FileText size={18} className="text-primary" />
+          </div>
+          <div>
+            <p className="font-bold text-slate-900 text-sm">Executive Board Report Generator</p>
+            <p className="text-xs text-slate-500">One-click generation of professional reports from this workflow.</p>
+          </div>
         </div>
-        <div>
-          <p className="font-bold text-slate-900 text-sm">Executive Board Report Generator</p>
-          <p className="text-xs text-slate-500">One-click generation of professional reports from this workflow.</p>
+        
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <button
+              onClick={() => setShareOpen(!shareOpen)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors bg-white shadow-sm"
+            >
+              <Share2 size={14} /> Share
+            </button>
+            {shareOpen && (
+              <div className="absolute right-0 mt-1.5 w-48 bg-white border border-border rounded-xl shadow-lg z-50 py-1.5 text-xs animate-in fade-in slide-in-from-top-1 duration-150">
+                <button
+                  onClick={() => {
+                    setShareOpen(false);
+                    alert("Email sharing drafted.");
+                  }}
+                  className="w-full text-left px-3.5 py-2 hover:bg-secondary/50 flex items-center gap-2 text-slate-700 hover:text-primary transition-colors"
+                >
+                  <Mail size={13} className="text-slate-400" /> Share via Email
+                </button>
+                <button
+                  onClick={() => {
+                    setShareOpen(false);
+                    alert("Posted to Slack!");
+                  }}
+                  className="w-full text-left px-3.5 py-2 hover:bg-secondary/50 flex items-center gap-2 text-slate-700 hover:text-primary transition-colors"
+                >
+                  <MessageSquare size={13} className="text-slate-400" /> Post to Slack
+                </button>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    setShareOpen(false);
+                    alert("Public link copied to clipboard!");
+                  }}
+                  className="w-full text-left px-3.5 py-2 hover:bg-secondary/50 flex items-center gap-2 text-slate-700 hover:text-primary transition-colors"
+                >
+                  <Copy size={13} className="text-slate-400" /> Copy Public Link
+                </button>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={handleDownload}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white hover:bg-[#153e23] transition-colors bg-[#1e5631] shadow-sm"
+          >
+            <Download size={14} /> Export
+          </button>
         </div>
       </div>
 

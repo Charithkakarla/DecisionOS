@@ -31,11 +31,23 @@ export function PipelineDrawer() {
     const { activeTab, setActiveTab, agentStatus, hasPendingApproval } = useWorkflowTab();
 
     return (
-        <div className="w-[232px] bg-card border-r border-border h-full flex flex-col shrink-0 overflow-hidden">
+        <div
+            className="w-[232px] h-full flex flex-col shrink-0 overflow-hidden"
+            style={{
+                backgroundColor: "hsl(var(--sidebar-bg))",
+                borderRight: "1px solid hsl(var(--sidebar-border))",
+            }}
+        >
 
             {/* Header */}
-            <div className="flex items-center justify-between px-4 h-[65px] border-b border-border shrink-0">
-                <span className="text-[10px] font-black tracking-[0.22em] text-muted-foreground uppercase select-none">
+            <div
+                className="flex items-center justify-between px-4 h-[65px] shrink-0"
+                style={{ borderBottom: "1px solid hsl(var(--sidebar-border))" }}
+            >
+                <span
+                    className="text-[10px] font-black tracking-[0.22em] uppercase select-none"
+                    style={{ color: "hsl(var(--sidebar-muted))" }}
+                >
                     Analysis Pipeline
                 </span>
                 <motion.button
@@ -43,7 +55,8 @@ export function PipelineDrawer() {
                     whileTap={{ scale: 0.9 }}
                     onClick={() => navigate("/workflows")}
                     aria-label="Close pipeline"
-                    className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                    className="flex h-6 w-6 items-center justify-center rounded-lg transition-colors"
+                    style={{ color: "hsl(var(--sidebar-muted))" }}
                 >
                     <X size={13} />
                 </motion.button>
@@ -67,17 +80,35 @@ export function PipelineDrawer() {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: i * 0.02, duration: 0.18, ease: "easeOut" }}
                                 whileHover={{ x: isActive ? 0 : 2 }}
-                                className={`group relative w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 ${isActive
-                                        ? "bg-primary/10 text-primary"
-                                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                                    }`}
+                                className="group relative w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150"
+                                style={{
+                                    backgroundColor: isActive
+                                        ? "hsl(var(--sidebar-active-bg))"
+                                        : "transparent",
+                                    color: isActive
+                                        ? "hsl(var(--sidebar-active-fg))"
+                                        : "hsl(var(--sidebar-muted))",
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!isActive) {
+                                        e.currentTarget.style.backgroundColor = "hsl(var(--sidebar-hover-bg))";
+                                        e.currentTarget.style.color = "hsl(var(--sidebar-fg))";
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!isActive) {
+                                        e.currentTarget.style.backgroundColor = "transparent";
+                                        e.currentTarget.style.color = "hsl(var(--sidebar-muted))";
+                                    }
+                                }}
                             >
                                 {/* Active left bar */}
                                 <AnimatePresence>
                                     {isActive && (
                                         <motion.span
                                             layoutId="active-bar"
-                                            className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-primary"
+                                            className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full"
+                                            style={{ backgroundColor: "hsl(var(--sidebar-active-fg))" }}
                                             initial={{ scaleY: 0 }}
                                             animate={{ scaleY: 1 }}
                                             exit={{ scaleY: 0 }}
@@ -87,36 +118,13 @@ export function PipelineDrawer() {
                                 </AnimatePresence>
 
                                 {/* Icon */}
-                                <span className={`shrink-0 transition-colors ${isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
-                                    }`}>
-                                    {tab.icon}
-                                </span>
+                                <span className="shrink-0">{tab.icon}</span>
 
                                 {/* Label */}
-                                <span className="flex-1 text-left truncate">{tab.label}</span>
-
-                                {/* Badges + status dots */}
-                                <span className="flex items-center gap-1.5 shrink-0">
-
-                                    {tab.agentKey && (
-                                        <motion.span
-                                            className="w-2 h-2 rounded-full shrink-0"
-                                            animate={{
-                                                backgroundColor: isDone ? "#22c55e" : "#d1d5db",
-                                                boxShadow: isDone ? "0 0 0 3px rgba(34,197,94,0.2)" : "none",
-                                            }}
-                                            transition={{ duration: 0.3 }}
-                                        />
-                                    )}
-
-                                    {isPending && (
-                                        <motion.span
-                                            className="w-2 h-2 rounded-full bg-status-warning"
-                                            animate={{ scale: [1, 1.3, 1] }}
-                                            transition={{ repeat: Infinity, duration: 1.5 }}
-                                        />
-                                    )}
+                                <span className={`flex-1 text-left truncate ${isActive ? "font-semibold" : ""}`}>
+                                    {tab.label}
                                 </span>
+
                             </motion.button>
                         );
                     })}
@@ -124,8 +132,14 @@ export function PipelineDrawer() {
             </nav>
 
             {/* Footer */}
-            <div className="border-t border-border px-3 py-3 shrink-0">
-                <p className="text-[9px] font-semibold text-muted-foreground/60 text-center uppercase tracking-widest">
+            <div
+                className="px-3 py-3 shrink-0"
+                style={{ borderTop: "1px solid hsl(var(--sidebar-border))" }}
+            >
+                <p
+                    className="text-[9px] font-semibold text-center uppercase tracking-widest"
+                    style={{ color: "hsl(var(--sidebar-muted) / 0.5)" }}
+                >
                     Decision OS · v1.0
                 </p>
             </div>

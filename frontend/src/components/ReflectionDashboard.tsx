@@ -36,7 +36,7 @@ export default function ReflectionDashboard({ reflectionArtifact, apiBaseUrl }: 
 
   useEffect(() => {
     setLoadingReport(true);
-    fetch(`${apiBaseUrl}/api/v1/reflection/report/${workflow_id}`)
+    fetch(`${apiBaseUrl}/reflection/report/${workflow_id}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => setReportData(d))
       .catch(() => { })

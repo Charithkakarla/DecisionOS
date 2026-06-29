@@ -278,7 +278,7 @@ export function Reports() {
           <span className="text-xs text-muted-foreground">{completedWorkflows.length} report{completedWorkflows.length !== 1 ? "s" : ""} available</span>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl shadow-card overflow-hidden">
+        <div className="bg-card border border-border rounded-2xl shadow-card">
           {loading ? (
             <div className="flex items-center justify-center py-16 text-muted-foreground">
               <Loader2 className="animate-spin mr-2" size={18} />
